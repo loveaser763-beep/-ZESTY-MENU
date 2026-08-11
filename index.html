@@ -8,9 +8,11 @@
     body { font-family: system-ui, sans-serif; background-color: #f8f9fa; padding: 20px; margin: 0; }
     .container { max-width: 600px; margin: auto; }
     h1 { text-align: center; color: #333; }
-    .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
-    .item-name { font-size: 1.1rem; font-weight: bold; color: #222; }
-    .item-price { font-size: 1.1rem; font-weight: bold; color: #d9534f; }
+    .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 15px; }
+    .card img { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; background-color: #eee; }
+    .item-info { flex: 1; }
+    .item-name { font-size: 1.1rem; font-weight: bold; color: #222; display: block; }
+    .item-price { font-size: 1rem; font-weight: bold; color: #d9534f; margin-top: 4px; display: block; }
     .admin-panel { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 25px; }
     input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; }
     button { background-color: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; }
@@ -27,6 +29,7 @@
     <h3>إضافة صنف جديد للمنيو</h3>
     <input type="text" id="itemName" placeholder="اسم الصنف (مثلاً: بيتزا مارجريتا)">
     <input type="number" id="itemPrice" placeholder="السعر (مثلاً: 120)">
+    <input type="text" id="itemImg" placeholder="رابط صورة الوجبة (اختياري)">
     <button id="addBtn">إضافة للمنيو</button>
   </div>
 
@@ -40,7 +43,6 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-  // إعدادات Firebase الخاصة بمشروعك
   const firebaseConfig = {
     apiKey: "AIzaSyBTEPyT_ylg83IZRiO4sUSWs8LKOt3x11Q",
     authDomain: "zesty-menu-64909.firebaseapp.com",
@@ -64,9 +66,15 @@
       const data = doc.data();
       const card = document.createElement("div");
       card.className = "card";
+      
+      const imgTag = data.img ? `<img src="${data.img}" alt="${data.name}">` : '';
+
       card.innerHTML = `
-        <span class="item-name">${data.name || 'بدون اسم'}</span>
-        <span class="item-price">${data.price ? data.price + ' ج.م' : ''}</span>
+        ${imgTag}
+        <div class="item-info">
+          <span class="item-name">${data.name || 'بدون اسم'}</span>
+          <span class="item-price">${data.price ? data.price + ' ج.م' : ''}</span>
+        </div>
       `;
       menuContainer.appendChild(card);
     });
@@ -76,11 +84,13 @@
   addBtn.addEventListener("click", async () => {
     const name = document.getElementById("itemName").value;
     const price = Number(document.getElementById("itemPrice").value);
+    const img = document.getElementById("itemImg").value;
 
     if (name && price) {
-      await addDoc(collection(db, "menu"), { name: name, price: price });
+      await addDoc(collection(db, "menu"), { name: name, price: price, img: img });
       document.getElementById("itemName").value = "";
       document.getElementById("itemPrice").value = "";
+      document.getElementById("itemImg").value = "";
       alert("تمت إضافة الصنف بنجاح!");
     } else {
       alert("يرجى إدخال اسم الصنف والسعر");
