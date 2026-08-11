@@ -1,21 +1,92 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zesty Menu</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background-color: #f8f9fa; padding: 20px; margin: 0; }
+    .container { max-width: 600px; margin: auto; }
+    h1 { text-align: center; color: #333; }
+    .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+    .item-name { font-size: 1.1rem; font-weight: bold; color: #222; }
+    .item-price { font-size: 1.1rem; font-weight: bold; color: #d9534f; }
+    .admin-panel { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 25px; }
+    input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; }
+    button { background-color: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; }
+    button:hover { background-color: #218838; }
+  </style>
+</head>
+<body>
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyBTEPyT_ylg83IZRiO4sUSWs8LKOt3x11Q",
-  authDomain: "zesty-menu-64909.firebaseapp.com",
-  projectId: "zesty-menu-64909",
-  storageBucket: "zesty-menu-64909.firebasestorage.app",
-  messagingSenderId: "213107051074",
-  appId: "1:213107051074:web:5e4fb4743206f99823fbdb",
-  measurementId: "G-8QTNP9ERG4"
-};
+<div class="container">
+  <h1>🍽️ ZESTY MENU</h1>
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+  <!-- لوحة إدخال الأصناف الجديدة -->
+  <div class="admin-panel">
+    <h3>إضافة صنف جديد للمنيو</h3>
+    <input type="text" id="itemName" placeholder="اسم الصنف (مثلاً: بيتزا مارجريتا)">
+    <input type="number" id="itemPrice" placeholder="السعر (مثلاً: 120)">
+    <button id="addBtn">إضافة للمنيو</button>
+  </div>
+
+  <!-- عرض قائمة المنيو -->
+  <h2>القائمة:</h2>
+  <div id="menuContainer">جاري تحميل المنيو...</div>
+</div>
+
+<!-- Firebase SDKs -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  // إعدادات Firebase الخاصة بمشروعك
+  const firebaseConfig = {
+    apiKey: "AIzaSyBTEPyT_ylg83IZRiO4sUSWs8LKOt3x11Q",
+    authDomain: "zesty-menu-64909.firebaseapp.com",
+    projectId: "zesty-menu-64909",
+    storageBucket: "zesty-menu-64909.firebasestorage.app",
+    messagingSenderId: "213107051074",
+    appId: "1:213107051074:web:5e4fb4743206f99823fbdb",
+    measurementId: "G-8QTNP9ERG4"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const menuContainer = document.getElementById("menuContainer");
+  const addBtn = document.getElementById("addBtn");
+
+  // 1. القراءة والمزامنة اللحظية للمنيو
+  onSnapshot(collection(db, "menu"), (snapshot) => {
+    menuContainer.innerHTML = "";
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <span class="item-name">${data.name || 'بدون اسم'}</span>
+        <span class="item-price">${data.price ? data.price + ' ج.م' : ''}</span>
+      `;
+      menuContainer.appendChild(card);
+    });
+  });
+
+  // 2. إضافة صنف جديد
+  addBtn.addEventListener("click", async () => {
+    const name = document.getElementById("itemName").value;
+    const price = Number(document.getElementById("itemPrice").value);
+
+    if (name && price) {
+      await addDoc(collection(db, "menu"), { name: name, price: price });
+      document.getElementById("itemName").value = "";
+      document.getElementById("itemPrice").value = "";
+      alert("تمت إضافة الصنف بنجاح!");
+    } else {
+      alert("يرجى إدخال اسم الصنف والسعر");
+    }
+  });
+</script>
+
+</body>
+</html>
