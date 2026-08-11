@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>زيستي | ZESTY Menu</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101b2d;color:#fff;font-family:Arial,Tahoma,sans-serif}
+.wrap{max-width:560px;margin:auto;padding:18px 14px 35px}
+header{text-align:center;padding:20px 10px 18px}
+.logo{font-size:42px;font-weight:900;letter-spacing:2px}
+.sub{color:#d7dbe2;font-size:14px;margin-top:5px}
+.tabs{display:flex;gap:8px;overflow:auto;padding:5px 0 15px;position:sticky;top:0;background:#101b2d;z-index:5}
+.tabs button{border:1px solid #39465a;background:#18253a;color:#fff;border-radius:20px;padding:9px 14px;white-space:nowrap;font-size:13px}
+.tabs button.active{background:#fff;color:#101b2d}
+.section{margin-top:10px}
+.section h2{font-size:20px;margin:18px 2px 10px}
+.card{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#17243a;border:1px solid #26364f;border-radius:14px;padding:14px;margin:8px 0}
+.name{font-size:15px;line-height:1.5}
+.price{font-weight:800;font-size:16px;white-space:nowrap}
+.footer{text-align:center;color:#9fa8b7;font-size:12px;margin-top:28px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="logo">ZESTY</div>
+  <div class="sub">منيو زيستي • نادي بورتو الرياضي</div>
+</header>
+<div class="tabs">
+  <button class="active" onclick="show('all',this)">الكل</button>
+  <button onclick="show('drinks',this)">المشروبات</button>
+  <button onclick="show('snacks',this)">سناكس</button>
+  <button onclick="show('sweets',this)">حلويات</button>
+  <button onclick="show('kids',this)">مفاجآت</button>
+  <button onclick="show('other',this)">أخرى</button>
+</div>
+<div id="menu"></div>
+<div class="footer">أسعار زيستي — قابلة للتحديث من إدارة المحل</div>
+</div>
+<script>
+const items=[
+["drinks","عصير جهينه",15],["drinks","لبن جهينه ميكس",20],["drinks","مشروب طاقة",25],
+["drinks","مشروب شعير بالخوخ والفانيليا",25],["drinks","مشروب شعير بالأناناس والكراميل",25],
+["drinks","بيبسي كانز",20],["drinks","سفن كانز",20],["drinks","ميرندا كانز",20],
+["drinks","مشروب بيريل",25],["drinks","مياه معدنية صغيرة",10],["drinks","مياه معدنية كبيرة",15],
+["snacks","مولتو قطع",15],["snacks","مولتو قطعة واحدة",15],["snacks","بيك رولز أطعم",15],
+["snacks","شيبسي أطعم",15],["snacks","دوريتوس أطعم",15],["snacks","ميكاس شيكولاتة ستيكس",25],
+["snacks","كوكيز العبد جامبو شيكولاتة",40],
+["sweets","جيلي كولا بيبيتو",10],["sweets","مصاصة سوبر لولي",10],["sweets","مصاصة مونستر",10],
+["kids","بيضة ماكس للبنات والأولاد",15],["kids","بيضة ماجيك أولاد وبنات",10],
+["other","مناديل جيب",5],["other","مناديل سحب زينة",30],["other","لبان نوفا دايت مستورد",20]
+];
+const titles={drinks:"🥤 المشروبات",snacks:"🍟 شيبسي وسناكس",sweets:"🍬 حلويات ولولي",kids:"🧸 ألعاب ومفاجآت",other:"🧻 أخرى"};
+function show(cat,btn){
+ document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
+ btn.classList.add('active');
+ const list=cat==='all'?items:items.filter(x=>x[0]===cat);
+ let out='';
+ if(cat==='all'){
+   Object.keys(titles).forEach(k=>{const a=list.filter(x=>x[0]===k);if(a.length)out+=section(k,a)});
+ }else out=section(cat,list);
+ document.getElementById('menu').innerHTML=out;
+}
+function section(k,a){
+ return `<section class="section"><h2>${titles[k]}</h2>`+
+ a.map(x=>`<div class="card"><div class="name">${x[1]}</div><div class="price">${x[2]} جنيه</div></div>`).join('')+
+ `</section>`;
+}
+show('all',document.querySelector('.tabs button'));
+</script>
+</body>
+</html>
