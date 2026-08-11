@@ -9,14 +9,15 @@
     .container { max-width: 600px; margin: auto; }
     h1 { text-align: center; color: #333; }
     .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 15px; }
-    .card img { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; background-color: #eee; }
+    .card img { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; background-color: #f0f0f0; }
     .item-info { flex: 1; }
     .item-name { font-size: 1.1rem; font-weight: bold; color: #222; display: block; }
     .item-price { font-size: 1rem; font-weight: bold; color: #d9534f; margin-top: 4px; display: block; }
     .admin-panel { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 25px; }
+    label { display: block; margin-top: 8px; font-size: 0.9rem; color: #555; }
     input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; }
     button { background-color: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; }
-    button:hover { background-color: #218838; }
+    button:disabled { background-color: #888; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -24,12 +25,15 @@
 <div class="container">
   <h1>🍽️ ZESTY MENU</h1>
 
-  <!-- لوحة إدخال الأصناف الجديدة -->
+  <!-- لوحة إضافة الصنف والصورة -->
   <div class="admin-panel">
     <h3>إضافة صنف جديد للمنيو</h3>
-    <input type="text" id="itemName" placeholder="اسم الصنف (مثلاً: بيتزا مارجريتا)">
+    <input type="text" id="itemName" placeholder="اسم الصنف (مثلاً: بيتزا)">
     <input type="number" id="itemPrice" placeholder="السعر (مثلاً: 120)">
-    <input type="text" id="itemImg" placeholder="رابط صورة الوجبة (اختياري)">
+    
+    <label for="itemImage">صورة الوجبة (من المعرض):</label>
+    <input type="file" id="itemImage" accept="image/*">
+    
     <button id="addBtn">إضافة للمنيو</button>
   </div>
 
@@ -59,7 +63,7 @@
   const menuContainer = document.getElementById("menuContainer");
   const addBtn = document.getElementById("addBtn");
 
-  // 1. القراءة والمزامنة اللحظية للمنيو
+  // 1. عرض المنيو والصور تلقائياً
   onSnapshot(collection(db, "menu"), (snapshot) => {
     menuContainer.innerHTML = "";
     snapshot.forEach((doc) => {
@@ -67,7 +71,7 @@
       const card = document.createElement("div");
       card.className = "card";
       
-      const imgTag = data.img ? `<img src="${data.img}" alt="${data.name}">` : '';
+      const imgTag = data.img ? `<img src="${data.img}" alt="${data.name}">` : `<div style="width:70px;height:70px;background:#eee;border-radius:8px;"></div>`;
 
       card.innerHTML = `
         ${imgTag}
@@ -80,20 +84,56 @@
     });
   });
 
-  // 2. إضافة صنف جديد
+  // 2. إضافة الصنف ورفع الصورة مجاناً على ImgBB
   addBtn.addEventListener("click", async () => {
     const name = document.getElementById("itemName").value;
     const price = Number(document.getElementById("itemPrice").value);
-    const img = document.getElementById("itemImg").value;
+    const fileInput = document.getElementById("itemImage");
+    const file = fileInput.files[0];
 
-    if (name && price) {
-      await addDoc(collection(db, "menu"), { name: name, price: price, img: img });
+    if (!name || !price) {
+      alert("يرجى إدخال اسم الصنف والسعر");
+      return;
+    }
+
+    addBtn.disabled = true;
+    addBtn.innerText = "جاري رفع الصورة والإضافة...";
+
+    try {
+      let imageUrl = "";
+
+      if (file) {
+        const formData = new FormData();
+        formData.append("image", file);
+        
+        // مفتاح API مجاني لرفع الصور
+        const res = await fetch("https://api.imgbb.com/1/upload?key=6d207e02198a847aa98d0a2a901485a5", {
+          method: "POST",
+          body: formData
+        });
+        const resData = await res.json();
+        if(resData.success) {
+          imageUrl = resData.data.url;
+        }
+      }
+
+      // حفظ الوجبة ورابط الصورة في Firestore
+      await addDoc(collection(db, "menu"), {
+        name: name,
+        price: price,
+        img: imageUrl
+      });
+
       document.getElementById("itemName").value = "";
       document.getElementById("itemPrice").value = "";
-      document.getElementById("itemImg").value = "";
-      alert("تمت إضافة الصنف بنجاح!");
-    } else {
-      alert("يرجى إدخال اسم الصنف والسعر");
+      fileInput.value = "";
+      alert("تمت إضافة الوجبة بالصورة بنجاح!");
+    } catch (error) {
+      console.error(error);
+      alert("حدث خطأ أثناء الإضافة: " + error.message);
+    } finally {
+      addBtn.disabled = false;
+      addBtn.innerText = "إضافة للمنيو";
     }
   });
 </script>
