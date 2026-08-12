@@ -6,55 +6,74 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <title>Zesty Menu</title>
   <style>
-    body { font-family: system-ui, sans-serif; background-color: #f8f9fa; padding: 15px; margin: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background-color: #f4f6f8; padding: 15px; margin: 0; }
     .container { max-width: 500px; margin: auto; }
     
-    /* هيدر الموقع - بنر الصورة العريض */
-    .header-box { text-align: center; margin-bottom: 20px; }
-    .banner-img { width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 12px; display: none; object-fit: cover; }
-    h1 { text-align: center; color: #333; margin: 0; font-size: 1.8rem; }
-    .version-tag { text-align: center; color: #28a745; font-weight: bold; margin-bottom: 15px; font-size: 0.9rem; }
+    /* هيدر الموقع - البنر الرئيسي */
+    .header-card { 
+      background: #ffffff; 
+      border-radius: 16px; 
+      overflow: hidden; 
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08); 
+      margin-bottom: 20px; 
+      text-align: center;
+    }
+    .banner-img { 
+      width: 100%; 
+      height: auto; 
+      display: block; 
+      object-fit: contain; 
+      border-bottom: 3px solid #28a745;
+    }
+    .header-details { padding: 15px 10px; }
+    h1 { color: #1a1a1a; margin: 0; font-size: 1.8rem; font-weight: 800; letter-spacing: 0.5px; }
+    .version-tag { color: #28a745; font-weight: 600; font-size: 0.88rem; margin-top: 4px; }
     
-    .admin-panel { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; border-top: 4px solid #333; }
-    .admin-panel h3 { margin-top: 0; color: #333; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+    /* الكروت ولوحات التحكم */
+    .admin-panel { background: #fff; padding: 16px; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 18px; border-top: 4px solid #333; }
+    .admin-panel h3 { margin-top: 0; color: #222; font-size: 1.05rem; border-bottom: 1px solid #eee; padding-bottom: 8px; font-weight: 700; }
     
-    input, select, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
-    button.add-btn { background-color: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; }
+    input, select, button { padding: 11px; margin: 6px 0; width: 100%; box-sizing: border-box; border: 1px solid #dcdcdc; border-radius: 8px; font-size: 0.95rem; outline: none; }
+    input:focus, select:focus { border-color: #28a745; }
+    button.add-btn { background-color: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    button.add-btn:active { opacity: 0.9; }
     
     /* تنسيق إدارة الأقسام */
     .cat-list { margin-top: 10px; }
-    .cat-item { display: flex; justify-content: space-between; align-items: center; background: #f1f3f5; padding: 8px 12px; margin-bottom: 5px; border-radius: 6px; }
-    .cat-item span { font-weight: bold; color: #444; }
+    .cat-item { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 8px 12px; margin-bottom: 6px; border-radius: 8px; border: 1px solid #e9ecef; }
+    .cat-item span { font-weight: bold; color: #333; }
     .cat-btns { display: flex; gap: 5px; }
-    .cat-btns button { padding: 4px 8px; width: auto; margin: 0; font-size: 0.85rem; border: none; border-radius: 4px; cursor: pointer; }
+    .cat-btns button { padding: 5px 9px; width: auto; margin: 0; font-size: 0.85rem; border: none; border-radius: 6px; cursor: pointer; }
     .cat-btns .edit-c { background: #ffc107; color: #000; }
     .cat-btns .del-c { background: #dc3545; color: #fff; }
 
     /* تنسيق القائمة الرئيسية */
-    .category-title { background: #e9ecef; color: #222; padding: 8px 12px; border-radius: 8px; margin-top: 25px; margin-bottom: 10px; font-size: 1.2rem; border-right: 5px solid #28a745; display: inline-block; width: 100%; box-sizing: border-box;}
-    .card { background: white; border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; }
+    .category-title { background: #1a1a1a; color: #fff; padding: 10px 14px; border-radius: 10px; margin-top: 25px; margin-bottom: 12px; font-size: 1.15rem; font-weight: bold; border-right: 5px solid #28a745; display: block; box-sizing: border-box;}
+    .card { background: white; border-radius: 12px; padding: 14px; margin-bottom: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: space-between; border: 1px solid #f0f0f0; }
     .item-info { display: flex; flex-direction: column; }
-    .item-name { font-size: 1.1rem; font-weight: bold; color: #222; }
-    .item-price { font-size: 1rem; font-weight: bold; color: #d9534f; margin-top: 2px; }
+    .item-name { font-size: 1.05rem; font-weight: bold; color: #222; }
+    .item-price { font-size: 1rem; font-weight: 800; color: #28a745; margin-top: 3px; }
     .btn-group { display: flex; gap: 6px; }
-    .btn-group button { padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; width: auto; font-size: 0.9rem;}
-    .edit-btn { background-color: #ffc107; color: #333; }
+    .btn-group button { padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; width: auto; font-size: 0.85rem;}
+    .edit-btn { background-color: #ffc107; color: #222; }
     .delete-btn { background-color: #dc3545; color: white; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- رأس الصفحة وبنر صورة المكان -->
-  <div class="header-box">
-    <img id="mainLogo" class="banner-img" src="" alt="صورة المكان">
-    <h1>🍽️ ZESTY MENU</h1>
-    <div class="version-tag">✨ (لوحة التحكم الشاملة)</div>
+  <!-- هيدر الصفحة وبنر الصورة الجديدة -->
+  <div class="header-card">
+    <img id="mainLogo" class="banner-img" src="" alt="ZESTY Banner">
+    <div class="header-details">
+      <h1>ZESTY MENU</h1>
+      <div class="version-tag">✨ (لوحة التحكم الشاملة)</div>
+    </div>
   </div>
 
   <!-- لوحة إعدادات البنر/اللوجو -->
   <div class="admin-panel" style="border-top-color: #6f42c1;">
-    <h3>🖼️ تغيير صورة الواجهة (Banner)</h3>
+    <h3>🖼️ رابط صورة الواجهة (Banner)</h3>
     <input type="text" id="logoUrlInput" placeholder="ضع رابط الصورة هنا">
     <button class="add-btn" style="background-color: #6f42c1;" id="saveLogoBtn">حفظ الصورة 💾</button>
   </div>
@@ -70,7 +89,7 @@
   <!-- لوحة الإضافة للأصناف -->
   <div class="admin-panel" style="border-top-color: #28a745;">
     <h3>🍔 إضافة صنف للقائمة</h3>
-    <label style="font-size: 0.9rem; color: #555;">اختر القسم:</label>
+    <label style="font-size: 0.85rem; color: #666; font-weight: bold;">اختر القسم:</label>
     <select id="itemCategory">
       <option value="">⏳ جاري تحميل الأقسام...</option>
     </select>
@@ -80,7 +99,7 @@
   </div>
 
   <!-- عرض القائمة -->
-  <h2 style="color: #444; border-bottom: 2px solid #ccc; padding-bottom: 5px;">القائمة:</h2>
+  <h2 style="color: #222; border-bottom: 2px solid #ddd; padding-bottom: 8px; font-size: 1.3rem;">القائمة:</h2>
   <div id="menuContainer">جاري تحميل الأصناف...</div>
 </div>
 
@@ -105,19 +124,23 @@
   const categoriesRef = collection(db, "zesty_categories");
   const settingsDoc = doc(db, "zesty_settings", "general");
 
+  // الصورة المباشرة الجديدة الافتراضية
+  const DEFAULT_BANNER = "https://i.ibb.co/0pkgqb0y/image.jpg";
+
   // ==========================
   // 1. نظام الصورة (Banner Settings)
   // ==========================
   onSnapshot(settingsDoc, (docSnap) => {
     const mainLogo = document.getElementById("mainLogo");
+    let currentUrl = DEFAULT_BANNER;
+    
     if (docSnap.exists() && docSnap.data().logoUrl) {
-      const url = docSnap.data().logoUrl;
-      mainLogo.src = url;
-      mainLogo.style.display = "block";
-      document.getElementById("logoUrlInput").value = url;
-    } else {
-      mainLogo.style.display = "none";
+      currentUrl = docSnap.data().logoUrl;
     }
+    
+    mainLogo.src = currentUrl;
+    mainLogo.style.display = "block";
+    document.getElementById("logoUrlInput").value = currentUrl;
   });
 
   document.getElementById("saveLogoBtn").onclick = async () => {
@@ -180,7 +203,7 @@
   window.editCategory = async (id, oldName) => {
     const newName = prompt("تعديل اسم القسم:", oldName);
     if (newName && newName !== oldName) {
-      await updateDoc(doc(db, "zesty_categories", id), { name: newName });
+      await updateDoc(doc(doc(db, "zesty_categories", id)), { name: newName });
       
       const q = query(menuRef, where("category", "==", oldName));
       const querySnapshot = await getDocs(q);
