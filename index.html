@@ -14,7 +14,9 @@
     .item-info { flex: 1; }
     .item-name { font-size: 1.1rem; font-weight: bold; color: #222; display: block; }
     .item-price { font-size: 1rem; font-weight: bold; color: #d9534f; margin-top: 4px; display: block; }
-    .delete-btn { background-color: #ff4d4d; color: white; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 0.85rem; }
+    .btn-group { display: flex; gap: 5px; flex-direction: column; }
+    .edit-btn { background-color: #ffc107; color: #333; border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
+    .delete-btn { background-color: #dc3545; color: white; border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 0.8rem; }
     .admin-panel { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 25px; }
     label { display: block; margin-top: 10px; font-size: 0.9rem; color: #555; }
     input, select, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
@@ -54,7 +56,7 @@
 <!-- Firebase SDKs -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBTEPyT_ylg83IZRiO4sUSWs8LKOt3x11Q",
@@ -104,7 +106,10 @@
               <span class="item-name">${item.name || 'بدون اسم'}</span>
               <span class="item-price">${item.price ? item.price + ' ج.م' : ''}</span>
             </div>
-            <button class="delete-btn" onclick="deleteItem('${item.id}')">حذف 🗑️</button>
+            <div class="btn-group">
+              <button class="edit-btn" onclick="editItem('${item.id}', '${item.name}', ${item.price})">تعديل ✏️</button>
+              <button class="delete-btn" onclick="deleteItem('${item.id}')">حذف 🗑️</button>
+            </div>
           `;
           menuContainer.appendChild(card);
         });
@@ -112,14 +117,28 @@
     }
   });
 
-  // 2. دالة الحذف
+  // 2. دالة التعديل
+  window.editItem = async (id, currentName, currentPrice) => {
+    const newName = prompt("ادخل الاسم الجديد:", currentName);
+    const newPrice = prompt("ادخل السعر الجديد:", currentPrice);
+
+    if (newName && newPrice) {
+      await updateDoc(doc(db, "menu", id), {
+        name: newName,
+        price: Number(newPrice)
+      });
+      alert("تم التعديل بنجاح!");
+    }
+  };
+
+  // 3. دالة الحذف
   window.deleteItem = async (id) => {
     if (confirm("هل انت متأكد من حذف هذا الصنف؟")) {
       await deleteDoc(doc(db, "menu", id));
     }
   };
 
-  // 3. إضافة الصنف بالقسم والصورة
+  // 4. إضافة الصنف بالقسم والصورة
   addBtn.addEventListener("click", async () => {
     const name = document.getElementById("itemName").value;
     const price = Number(document.getElementById("itemPrice").value);
