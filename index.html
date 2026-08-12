@@ -10,6 +10,9 @@
     .container { max-width: 500px; margin: auto; }
     h1 { text-align: center; color: #333; margin-bottom: 5px; }
     .version-tag { text-align: center; color: #28a745; font-weight: bold; margin-bottom: 15px; }
+    
+    .category-title { background: #e9ecef; color: #222; padding: 8px 12px; border-radius: 8px; margin-top: 20px; margin-bottom: 10px; font-size: 1.2rem; border-right: 5px solid #28a745; }
+    
     .card { background: white; border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; }
     .item-info { display: flex; flex-direction: column; }
     .item-name { font-size: 1.1rem; font-weight: bold; color: #222; }
@@ -20,7 +23,7 @@
     .delete-btn { background-color: #dc3545; color: white; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
     
     .admin-panel { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 25px; }
-    input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
+    input, select, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; background-color: white; }
     button.add-btn { background-color: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
   </style>
 </head>
@@ -28,11 +31,21 @@
 
 <div class="container">
   <h1>🍽️ ZESTY MENU</h1>
-  <div class="version-tag">✨ (قائمة الطعام)</div>
+  <div class="version-tag">✨ (قائمة الطعام المقسمة)</div>
 
   <!-- لوحة الإضافة -->
   <div class="admin-panel">
     <h3>إضافة صنف جديد</h3>
+    
+    <label style="font-size: 0.9rem; color: #555;">اختر القسم:</label>
+    <select id="itemCategory">
+      <option value="🍔 وجبات رئيسية">🍔 وجبات رئيسية</option>
+      <option value="🥤 مشروبات">🥤 مشروبات</option>
+      <option value="🍕 بيتزا وباستا">🍕 بيتزا وباستا</option>
+      <option value="🍰 حلويات">🍰 حلويات</option>
+      <option value="🍟 مقبلات وإضافات">🍟 مقبلات وإضافات</option>
+    </select>
+
     <input type="text" id="itemName" placeholder="اسم الصنف (مثلاً: بيبسي)">
     <input type="number" id="itemPrice" placeholder="السعر (مثلاً: 30)">
     <button class="add-btn" id="addBtn">إضافة للمنيو</button>
@@ -62,7 +75,7 @@
   const menuRef = collection(db, "zesty_menu");
   const menuContainer = document.getElementById("menuContainer");
 
-  // عرض القائمة فوراً مع الأزرار
+  // عرض القائمة مقسمة فوراً
   onSnapshot(menuRef, (snapshot) => {
     menuContainer.innerHTML = "";
     if (snapshot.empty) {
@@ -70,35 +83,55 @@
       return;
     }
 
+    // تجميع الأصناف حسب القسم
+    const categories = {};
+
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
       const id = docSnap.id;
-      
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `
-        <div class="item-info">
-          <span class="item-name">${data.name || 'بدون اسم'}</span>
-          <span class="item-price">${data.price ? data.price + ' ج.م' : '0 ج.م'}</span>
-        </div>
-        <div class="btn-group">
-          <button class="edit-btn" onclick="editItem('${id}', '${data.name}', ${data.price})">تعديل ✏️</button>
-          <button class="delete-btn" onclick="deleteItem('${id}')">حذف 🗑️</button>
-        </div>
-      `;
-      menuContainer.appendChild(card);
+      const cat = data.category || "عام";
+
+      if (!categories[cat]) {
+        categories[cat] = [];
+      }
+      categories[cat].push({ id, ...data });
     });
+
+    // طباعة كل قسم بأصنافه
+    for (const [catName, items] of Object.entries(categories)) {
+      const catHeader = document.createElement("div");
+      catHeader.className = "category-title";
+      catHeader.innerText = catName;
+      menuContainer.appendChild(catHeader);
+
+      items.forEach((item) => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="item-info">
+            <span class="item-name">${item.name || 'بدون اسم'}</span>
+            <span class="item-price">${item.price ? item.price + ' ج.م' : '0 ج.م'}</span>
+          </div>
+          <div class="btn-group">
+            <button class="edit-btn" onclick="editItem('${item.id}', '${item.name}', ${item.price})">تعديل ✏️</button>
+            <button class="delete-btn" onclick="deleteItem('${item.id}')">حذف 🗑️</button>
+          </div>
+        `;
+        menuContainer.appendChild(card);
+      });
+    }
   });
 
   // إضافة صنف
   document.getElementById("addBtn").onclick = async () => {
+    const category = document.getElementById("itemCategory").value;
     const name = document.getElementById("itemName").value;
     const price = Number(document.getElementById("itemPrice").value);
 
     if (!name || !price) return alert("يرجى كتابة الاسم والسعر");
 
     try {
-      await addDoc(menuRef, { name, price });
+      await addDoc(menuRef, { category, name, price });
       document.getElementById("itemName").value = "";
       document.getElementById("itemPrice").value = "";
     } catch (e) {
