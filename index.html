@@ -17,6 +17,10 @@
     input, select, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
     button.add-btn { background-color: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; }
     
+    /* زر التغذية السريعة */
+    .bulk-btn { background-color: #6f42c1; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    .bulk-btn:disabled { background-color: #aaa; cursor: not-allowed; }
+
     /* تنسيق إدارة الأقسام */
     .cat-list { margin-top: 10px; }
     .cat-item { display: flex; justify-content: space-between; align-items: center; background: #f1f3f5; padding: 8px 12px; margin-bottom: 5px; border-radius: 6px; }
@@ -62,6 +66,10 @@
     <input type="text" id="itemName" placeholder="اسم الصنف (مثلاً: بيبسي)">
     <input type="number" id="itemPrice" placeholder="السعر (مثلاً: 30)">
     <button class="add-btn" id="addBtn">إضافة للمنيو ✔️</button>
+
+    <!-- زر رفع المنيو الكامل تلقائياً -->
+    <hr style="margin: 15px 0; border: 0; border-top: 1px dashed #ccc;">
+    <button class="bulk-btn" id="seedBtn">رفع المنيو الكامل تلقائياً (114 صنف) 🚀</button>
   </div>
 
   <!-- عرض القائمة -->
@@ -109,13 +117,11 @@
       const data = docSnap.data();
       const id = docSnap.id;
       
-      // تعبئة قائمة الاختيارات في إضافة صنف
       const option = document.createElement("option");
       option.value = data.name;
       option.innerText = data.name;
       itemCategorySelect.appendChild(option);
 
-      // تعبئة قائمة إدارة الأقسام
       catListDiv.innerHTML += `
         <div class="cat-item">
           <span>${data.name}</span>
@@ -128,7 +134,6 @@
     });
   });
 
-  // إضافة قسم
   document.getElementById("addCatBtn").onclick = async () => {
     const catName = document.getElementById("newCategoryName").value;
     if (!catName) return alert("اكتب اسم القسم أولاً!");
@@ -137,14 +142,11 @@
     document.getElementById("newCategoryName").value = "";
   };
 
-  // تعديل قسم (مع تحديث الأصناف اللي جواه)
   window.editCategory = async (id, oldName) => {
     const newName = prompt("تعديل اسم القسم:", oldName);
     if (newName && newName !== oldName) {
-      // 1. تحديث اسم القسم
       await updateDoc(doc(db, "zesty_categories", id), { name: newName });
       
-      // 2. تحديث كل الأصناف المرتبطة بالقسم القديم للقسم الجديد أوتوماتيكياً
       const q = query(menuRef, where("category", "==", oldName));
       const querySnapshot = await getDocs(q);
       querySnapshot.forEach(async (itemDoc) => {
@@ -154,13 +156,11 @@
     }
   };
 
-  // حذف قسم
   window.deleteCategory = async (id, catName) => {
     if (confirm(`هل أنت متأكد من حذف قسم "${catName}"؟ \n(الأصناف بداخلة لن تحذف ولكن ستظهر بدون قسم)`)) {
       await deleteDoc(doc(db, "zesty_categories", id));
     }
   };
-
 
   // ==========================
   // 2. نظام الأصناف (Menu Items)
@@ -201,7 +201,6 @@
     }
   });
 
-  // إضافة صنف
   document.getElementById("addBtn").onclick = async () => {
     const category = document.getElementById("itemCategory").value || "عام";
     const name = document.getElementById("itemName").value;
@@ -214,7 +213,6 @@
     document.getElementById("itemPrice").value = "";
   };
 
-  // تعديل صنف
   window.editItem = async (id, oldName, oldPrice) => {
     const newName = prompt("تعديل اسم الصنف:", oldName);
     const newPrice = prompt("تعديل السعر:", oldPrice);
@@ -223,10 +221,181 @@
     }
   };
 
-  // حذف صنف
   window.deleteItem = async (id) => {
     if (confirm("حذف هذا الصنف؟")) {
       await deleteDoc(doc(db, "zesty_menu", id));
+    }
+  };
+
+  // ==========================
+  // 3. رفع المنيو الكامل تلقائياً
+  // ==========================
+  const fullMenuData = [
+    // 🥤 المشروبات والعصائر والمياه
+    { category: "🥤 المشروبات والعصائر والمياه", name: "بريل كانز", price: 25.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "فاموس أناناس بالكراميل (مشروب شعير)", price: 25.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "فاموس خوخ بالفانيليا (مشروب شعير)", price: 25.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "فيروز كانز 330مل", price: 25.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "بيبسي أكشن", price: 20.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "سفن أب أكشن", price: 20.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "ميرندا أكشن", price: 20.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "بيبسي كانز 355مل", price: 20.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "سفن أب كانز 355مل", price: 20.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "ميرندا كانز 355مل", price: 20.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "جوريلا مشروب طاقة 250مل", price: 30.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "جوريلا مشروب طاقة 500مل", price: 50.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "تويست مشروب طاقة سادة", price: 25.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "تويست مشروب طاقة توت", price: 25.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "ستينج مشروب طاقة زجاج", price: 25.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "عصير بخيره جوافه", price: 10.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "عصير بخيره مانجو", price: 10.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "عصير بخيره تفاح", price: 10.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "عصير بست تفاح زجاج", price: 25.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "عصير بست جوافه زجاج", price: 25.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "عصير بست كوكتيل زجاج", price: 25.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "عصير بست مانجو زجاج", price: 25.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "عصير بست تفاح كيس", price: 15.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "عصير بست جوافه كيس", price: 15.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "عصير بست كوكتيل كيس", price: 15.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "عصير بست مانجو كيس", price: 15.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "عصير جهينه توت 235مل", price: 15.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "عصير جهينه تفاح 235مل", price: 15.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "عصير جهينه برتقال 235مل", price: 15.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "عصير جهينه مانجو 235مل", price: 15.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "عصير جهينه جوز هند 235مل", price: 15.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "لبن جهينه ميكس بالفانيليا", price: 20.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "لبن جهينه ميكس فراوله", price: 20.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "لبن جهينه ميكس كراميل", price: 20.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "عصير ناستي", price: 15.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "مياه معدنيه كبيره", price: 15.00 },
+    { category: "🥤 المشروبات والعصائر والمياه", name: "مياه معدنيه صغيره", price: 10.00 },
+
+    // 🍿 المقرمشات والشيبسي
+    { category: "🍿 المقرمشات والشيبسي", name: "بيك رولز عائلي جبنة ناتشو", price: 20.00 },
+    { category: "🍿 المقرمشات والشيبسي", name: "بيك رولز عائلي زيتون", price: 20.00 },
+    { category: "🍿 المقرمشات والشيبسي", name: "بيك رولز عائلي كاتشب", price: 20.00 },
+    { category: "🍿 المقرمشات والشيبسي", name: "بيك رولز بيتزا", price: 15.00 },
+    { category: "🍿 المقرمشات والشيبسي", name: "بيك رولز ميكس جبنة", price: 15.00 },
+    { category: "🍿 المقرمشات والشيبسي", name: "بيك رولز زبدة وتوابل", price: 15.00 },
+    { category: "🍿 المقرمشات والشيبسي", name: "بيك ستيكس فراخ بالكاري", price: 15.00 },
+    { category: "🍿 المقرمشات والشيبسي", name: "تي رولز", price: 20.00 },
+    { category: "🍿 المقرمشات والشيبسي", name: "كرانشي أطعم", price: 15.00 },
+    { category: "🍿 المقرمشات والشيبسي", name: "دوريتوس أطعم", price: 15.00 },
+    { category: "🍿 المقرمشات والشيبسي", name: "صن بايتس أطعم", price: 15.00 },
+    { category: "🍿 المقرمشات والشيبسي", name: "شيبس أطعم", price: 15.00 },
+    { category: "🍿 المقرمشات والشيبسي", name: "شيتوس أطعم", price: 15.00 },
+    { category: "🍿 المقرمشات والشيبسي", name: "فورنو أطعم", price: 20.00 },
+
+    // 🍪 المخبوزات والكيك والبسكويت
+    { category: "🍪 المخبوزات والكيك والبسكويت", name: "توينكيز أوريجينال", price: 15.00 },
+    { category: "🍪 المخبوزات والكيك والبسكويت", name: "توينكيز دوو", price: 15.00 },
+    { category: "🍪 المخبوزات والكيك والبسكويت", name: "توينكيز الكينج", price: 15.00 },
+    { category: "🍪 المخبوزات والكيك والبسكويت", name: "هوهوز جامبو كاكاو", price: 50.00 },
+    { category: "🍪 المخبوزات والكيك والبسكويت", name: "هوهوز جامبو فانيليا", price: 50.00 },
+    { category: "🍪 المخبوزات والكيك والبسكويت", name: "هوهوز الكينج شيكولاتة", price: 15.00 },
+    { category: "🍪 المخبوزات والكيك والبسكويت", name: "هوهوز الكينج فانيليا", price: 15.00 },
+    { category: "🍪 المخبوزات والكيك والبسكويت", name: "مولتو ماجنم قطعة واحدة", price: 20.00 },
+    { category: "🍪 المخبوزات والكيك والبسكويت", name: "مولتو ماجنم قطع", price: 20.00 },
+    { category: "🍪 المخبوزات والكيك والبسكويت", name: "مولتو الكينج قطع", price: 25.00 },
+    { category: "🍪 المخبوزات والكيك والبسكويت", name: "مولتو ميني قطع", price: 15.00 },
+    { category: "🍪 المخبوزات والكيك والبسكويت", name: "مولتو قطعة واحدة", price: 15.00 },
+    { category: "🍪 المخبوزات والكيك والبسكويت", name: "بنبوني ميمكس", price: 10.00 },
+    { category: "🍪 المخبوزات والكيك والبسكويت", name: "كوكيز قطعة واحدة", price: 15.00 },
+    { category: "🍪 المخبوزات والكيك والبسكويت", name: "كوكيز 2 قطعة", price: 15.00 },
+    { category: "🍪 المخبوزات والكيك والبسكويت", name: "كوكيز العبد 6قطعة", price: 40.00 },
+    { category: "🍪 المخبوزات والكيك والبسكويت", name: "فريسكا أحمر", price: 15.00 },
+    { category: "🍪 المخبوزات والكيك والبسكويت", name: "فريسكا أخضر", price: 15.00 },
+    { category: "🍪 المخبوزات والكيك والبسكويت", name: "فريسكا شوكو دبل بار", price: 15.00 },
+    { category: "🍪 المخبوزات والكيك والبسكويت", name: "فريسكا هرم", price: 10.00 },
+    { category: "🍪 المخبوزات والكيك والبسكويت", name: "بسكوت ماكسي 3قطع", price: 10.00 },
+    { category: "🍪 المخبوزات والكيك والبسكويت", name: "اني تايم بسكوت مارشميلو", price: 25.00 },
+
+    // 🍬 الحلويات والجيلي والسكاكر
+    { category: "🍬 الحلويات والجيلي والسكاكر", name: "ميمكس أناناس صوابع", price: 15.00 },
+    { category: "🍬 الحلويات والجيلي والسكاكر", name: "ميمكس فراوله صوابع", price: 15.00 },
+    { category: "🍬 الحلويات والجيلي والسكاكر", name: "ميمكس زبده صوابع", price: 15.00 },
+    { category: "🍬 الحلويات والجيلي والسكاكر", name: "ميمكس قهوه صوابع", price: 15.00 },
+    { category: "🍬 الحلويات والجيلي والسكاكر", name: "ميمكس كراميلو صوابع", price: 15.00 },
+    { category: "🍬 الحلويات والجيلي والسكاكر", name: "جيلي ساور متر كولا", price: 10.00 },
+    { category: "🍬 الحلويات والجيلي والسكاكر", name: "جيلي ساور متر فواكه", price: 10.00 },
+    { category: "🍬 الحلويات والجيلي والسكاكر", name: "جيلي ساور متر بابل جم", price: 10.00 },
+    { category: "🍬 الحلويات والجيلي والسكاكر", name: "جيلي ساور متر بطيخ", price: 10.00 },
+    { category: "🍬 الحلويات والجيلي والسكاكر", name: "بيبيتو ساور ستيكس بطيخ", price: 15.00 },
+    { category: "🍬 الحلويات والجيلي والسكاكر", name: "بيبيتو ساور ستيكس تفاح", price: 15.00 },
+    { category: "🍬 الحلويات والجيلي والسكاكر", name: "بيبيتو ساور ستيكس فراوله", price: 15.00 },
+    { category: "🍬 الحلويات والجيلي والسكاكر", name: "بيبينو ساور ستيكس فواكه", price: 15.00 },
+    { category: "🍬 الحلويات والجيلي والسكاكر", name: "كاندي ميلوكس عرق سوس أطعم", price: 10.00 },
+    { category: "🍬 الحلويات والجيلي والسكاكر", name: "جيلي بيتزا", price: 15.00 },
+    { category: "🍬 الحلويات والجيلي والسكاكر", name: "جيلي بيتزا كبيره", price: 30.00 },
+    { category: "🍬 الحلويات والجيلي والسكاكر", name: "جيلي كولا بيبتو", price: 10.00 },
+    { category: "🍬 الحلويات والجيلي والسكاكر", name: "جيلي بينز(ميس يو)مستورد", price: 50.00 },
+    { category: "🍬 الحلويات والجيلي والسكاكر", name: "فرايزي مارشميلو", price: 15.00 },
+    { category: "🍬 الحلويات والجيلي والسكاكر", name: "ميكاس شيكولاته ستيكس", price: 25.00 },
+
+    // 🍭 اللبان والمصاصات والألعاب
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "مصاصه ميمكس", price: 5.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "مصاصه سوبر لولي", price: 10.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "مصاصه مونستر", price: 10.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "مصاصه برجر", price: 15.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "مسدس مصاصه", price: 50.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "لبان نوفا قرفه دايت", price: 20.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "لبان نوفا تفاح دايت", price: 20.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "لبان نوفا بطيخ دايت", price: 20.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "لبان نوفا فواكه دايت", price: 20.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "لبان توي بوكس تفاح وتوت عجله", price: 35.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "لبان توي بوكس فراوله وبطيخ", price: 35.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "لبان توي بوكس فواكه عجله", price: 35.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "لبان باطوك برتقال", price: 10.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "لبان باطوك موز", price: 10.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "لبان بازوكا طويل", price: 10.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "لبان بيج بابل مربع", price: 10.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "مينتوس فواكه", price: 20.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "مينتوس نعناع", price: 20.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "ليكود معجون شيكولاته", price: 20.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "ليكود معجون شيكولاته شكل جمجمه", price: 20.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "بيضه ماجيك بنات", price: 10.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "بيضه ماجيك اولاد", price: 10.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "بيضه ماكسي", price: 25.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "بيضه سيمبا وسط", price: 40.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "كوره نطاطه", price: 40.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "قلب لعبه", price: 40.00 },
+    { category: "🍭 اللبان والمصاصات والألعاب", name: "عربيه لعبه", price: 120.00 },
+
+    // 🧻 المناديل
+    { category: "🧻 المناديل", name: "مناديل جيب", price: 5.00 },
+    { category: "🧻 المناديل", name: "مناديل زينه سحب", price: 30.00 }
+  ];
+
+  document.getElementById("seedBtn").onclick = async () => {
+    if (!confirm("هل تريد رفع الـ 114 صنف كاملة بالأنواع والأقسام إلى قاعدة البيانات الآن؟")) return;
+
+    const seedBtn = document.getElementById("seedBtn");
+    seedBtn.disabled = true;
+    seedBtn.innerText = "⏳ جاري رفع المنيو بالكامل...";
+
+    try {
+      // 1. إضافة الأقسام الفريدة أولاً
+      const categoriesSet = new Set(fullMenuData.map(item => item.category));
+      for (const catName of categoriesSet) {
+        const q = query(categoriesRef, where("name", "==", catName));
+        const snap = await getDocs(q);
+        if (snap.empty) {
+          await addDoc(categoriesRef, { name: catName });
+        }
+      }
+
+      // 2. إضافة كافة الأصناف
+      for (const item of fullMenuData) {
+        await addDoc(menuRef, item);
+      }
+
+      alert("🎉 تم إضافة الـ 114 صنف بنجاح وبسرعة فائقة!");
+    } catch (err) {
+      console.error(err);
+      alert("حدث خطأ أثناء إضافة البيانات: " + err.message);
+    } finally {
+      seedBtn.disabled = false;
+      seedBtn.innerText = "رفع المنيو الكامل تلقائياً (114 صنف) 🚀";
     }
   };
 </script>
