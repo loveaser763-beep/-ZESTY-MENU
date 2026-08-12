@@ -8,6 +8,7 @@
     body { font-family: system-ui, sans-serif; background-color: #f8f9fa; padding: 20px; margin: 0; }
     .container { max-width: 600px; margin: auto; }
     h1 { text-align: center; color: #333; }
+    .version-tag { text-align: center; color: #28a745; font-weight: bold; margin-bottom: 15px; }
     .card { background: white; border-radius: 12px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 12px; }
     .card img { width: 65px; height: 65px; object-fit: cover; border-radius: 8px; background-color: #f0f0f0; }
     .item-info { flex: 1; }
@@ -32,6 +33,7 @@
 
 <div class="container">
   <h1>🍽️ ZESTY MENU</h1>
+  <div class="version-tag">✨ (إصدار جديد - التعديل والحذف متوفر)</div>
 
   <!-- لوحة إضافة صنف -->
   <div class="admin-panel">
@@ -47,7 +49,7 @@
 
   <!-- عرض قائمة المنيو -->
   <h2>القائمة:</h2>
-  <div id="menuContainer">جاري تحميل المنيو...</div>
+  <div id="menuContainer">جاري تحميل الأصناف...</div>
 </div>
 
 <!-- نافذة التعديل -->
@@ -97,6 +99,11 @@
   // 1. عرض الأصناف
   onSnapshot(collection(db, "menu"), (snapshot) => {
     menuContainer.innerHTML = "";
+    if (snapshot.empty) {
+      menuContainer.innerHTML = "<p style='text-align:center;'>لا توجد أصناف حالياً.</p>";
+      return;
+    }
+
     snapshot.forEach((document) => {
       const data = document.data();
       const id = document.id;
