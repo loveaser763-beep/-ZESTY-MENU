@@ -8,18 +8,20 @@
     body { font-family: system-ui, sans-serif; background-color: #f8f9fa; padding: 20px; margin: 0; }
     .container { max-width: 600px; margin: auto; }
     h1 { text-align: center; color: #333; }
-    h2.category-title { color: #2c3e50; border-bottom: 2px solid #28a745; padding-bottom: 5px; margin-top: 25px; font-size: 1.3rem; }
     .card { background: white; border-radius: 12px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 12px; }
     .card img { width: 65px; height: 65px; object-fit: cover; border-radius: 8px; background-color: #f0f0f0; }
     .item-info { flex: 1; }
     .item-name { font-size: 1.1rem; font-weight: bold; color: #222; display: block; }
     .item-price { font-size: 1rem; font-weight: bold; color: #d9534f; margin-top: 4px; display: block; }
-    .btn-group { display: flex; gap: 5px; flex-direction: column; }
-    .edit-btn { background-color: #ffc107; color: #333; border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
-    .delete-btn { background-color: #dc3545; color: white; border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 0.8rem; }
+    
+    /* أزرار التعديل والحذف */
+    .btn-group { display: flex; gap: 6px; flex-direction: column; }
+    .edit-btn { background-color: #ffc107; color: #333; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 0.85rem; font-weight: bold; }
+    .delete-btn { background-color: #dc3545; color: white; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 0.85rem; }
+    
     .admin-panel { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 25px; }
     label { display: block; margin-top: 10px; font-size: 0.9rem; color: #555; }
-    input, select, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
+    input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
     button.add-btn { background-color: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
     button:disabled { background-color: #888; cursor: not-allowed; }
   </style>
@@ -29,18 +31,11 @@
 <div class="container">
   <h1>🍽️ ZESTY MENU</h1>
 
-  <!-- لوحة إضافة صنف جديد -->
+  <!-- لوحة إضافة صنف -->
   <div class="admin-panel">
     <h3>إضافة صنف جديد للمنيو</h3>
     <input type="text" id="itemName" placeholder="اسم الصنف (مثلاً: بيبسي)">
     <input type="number" id="itemPrice" placeholder="السعر (مثلاً: 30)">
-    
-    <label for="itemCategory">اختر القسم:</label>
-    <select id="itemCategory">
-      <option value="مشروبات">🥤 قسم المشروبات</option>
-      <option value="عصائر">🍹 قسم العصائر</option>
-      <option value="سناكس">🍟 قسم السناكس</option>
-    </select>
 
     <label for="itemImage">صورة الوجبة (من الموبايل):</label>
     <input type="file" id="itemImage" accept="image/*">
@@ -48,7 +43,7 @@
     <button class="add-btn" id="addBtn">إضافة للمنيو</button>
   </div>
 
-  <!-- عرض قائمة المنيو مقسمة -->
+  <!-- عرض قائمة المنيو -->
   <h2>القائمة:</h2>
   <div id="menuContainer">جاري تحميل المنيو...</div>
 </div>
@@ -74,53 +69,36 @@
   const menuContainer = document.getElementById("menuContainer");
   const addBtn = document.getElementById("addBtn");
 
-  // 1. عرض الأصناف مقسمة حسب القسم
+  // 1. عرض الأصناف مع أزرار التعديل والحذف
   onSnapshot(collection(db, "menu"), (snapshot) => {
     menuContainer.innerHTML = "";
-    
-    const categories = { "مشروبات": [], "عصائر": [], "سناكس": [] };
-
     snapshot.forEach((document) => {
       const data = document.data();
-      const item = { id: document.id, ...data };
-      const cat = data.category || "مشروبات";
-      if (!categories[cat]) categories[cat] = [];
-      categories[cat].push(item);
+      const id = document.id;
+      const card = document.createElement("div");
+      card.className = "card";
+      
+      const imgTag = data.img ? `<img src="${data.img}" alt="${data.name}">` : `<div style="width:65px;height:65px;background:#eee;border-radius:8px;"></div>`;
+
+      card.innerHTML = `
+        ${imgTag}
+        <div class="item-info">
+          <span class="item-name">${data.name || 'بدون اسم'}</span>
+          <span class="item-price">${data.price ? data.price + ' ج.م' : ''}</span>
+        </div>
+        <div class="btn-group">
+          <button class="edit-btn" onclick="editItem('${id}', '${data.name}', ${data.price})">تعديل ✏️</button>
+          <button class="delete-btn" onclick="deleteItem('${id}')">حذف 🗑️</button>
+        </div>
+      `;
+      menuContainer.appendChild(card);
     });
-
-    for (const [categoryName, items] of Object.entries(categories)) {
-      if (items.length > 0) {
-        const catHeader = document.createElement("h2");
-        catHeader.className = "category-title";
-        catHeader.innerText = categoryName === "مشروبات" ? "🥤 قسم المشروبات" : categoryName === "عصائر" ? "🍹 قسم العصائر" : "🍟 قسم السناكس";
-        menuContainer.appendChild(catHeader);
-
-        items.forEach((item) => {
-          const card = document.createElement("div");
-          card.className = "card";
-          const imgTag = item.img ? `<img src="${item.img}" alt="${item.name}">` : `<div style="width:65px;height:65px;background:#eee;border-radius:8px;"></div>`;
-
-          card.innerHTML = `
-            ${imgTag}
-            <div class="item-info">
-              <span class="item-name">${item.name || 'بدون اسم'}</span>
-              <span class="item-price">${item.price ? item.price + ' ج.م' : ''}</span>
-            </div>
-            <div class="btn-group">
-              <button class="edit-btn" onclick="editItem('${item.id}', '${item.name}', ${item.price})">تعديل ✏️</button>
-              <button class="delete-btn" onclick="deleteItem('${item.id}')">حذف 🗑️</button>
-            </div>
-          `;
-          menuContainer.appendChild(card);
-        });
-      }
-    }
   });
 
-  // 2. دالة التعديل
+  // 2. أمر التعديل
   window.editItem = async (id, currentName, currentPrice) => {
-    const newName = prompt("ادخل الاسم الجديد:", currentName);
-    const newPrice = prompt("ادخل السعر الجديد:", currentPrice);
+    const newName = prompt("تعديل اسم الصنف:", currentName);
+    const newPrice = prompt("تعديل السعر:", currentPrice);
 
     if (newName && newPrice) {
       await updateDoc(doc(db, "menu", id), {
@@ -131,18 +109,17 @@
     }
   };
 
-  // 3. دالة الحذف
+  // 3. أمر الحذف
   window.deleteItem = async (id) => {
-    if (confirm("هل انت متأكد من حذف هذا الصنف؟")) {
+    if (confirm("هل أنت متأكد من حذف هذا الصنف؟")) {
       await deleteDoc(doc(db, "menu", id));
     }
   };
 
-  // 4. إضافة الصنف بالقسم والصورة
+  // 4. إضافة صنف جديد
   addBtn.addEventListener("click", async () => {
     const name = document.getElementById("itemName").value;
     const price = Number(document.getElementById("itemPrice").value);
-    const category = document.getElementById("itemCategory").value;
     const fileInput = document.getElementById("itemImage");
     const file = fileInput.files[0];
 
@@ -173,7 +150,6 @@
       await addDoc(collection(db, "menu"), {
         name: name,
         price: price,
-        category: category,
         img: imageUrl
       });
 
