@@ -1,49 +1,13 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Zesty Menu - Debug</title>
-  <style>
-    body { font-family: sans-serif; padding: 20px; }
-    .debug-box { color: white; background: #d9534f; padding: 10px; border-radius: 5px; margin-bottom: 20px; display: none; }
-  </style>
+    <title>Test Page</title>
 </head>
 <body>
-
-  <h1>🍽️ ZESTY MENU</h1>
-  <!-- مربع هيظهر فيه الخطأ بالظبط لو حصل -->
-  <div id="errorBox" class="debug-box"></div>
-  
-  <div id="menuContainer">جاري تحميل البيانات...</div>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyBTEPyT_ylg83IZRiO4sUSWs8LKOt3x11Q",
-    authDomain: "zesty-menu-64909.firebaseapp.com",
-    projectId: "zesty-menu-64909",
-    storageBucket: "zesty-menu-64909.firebasestorage.app",
-    messagingSenderId: "213107051074",
-    appId: "1:213107051074:web:5e4fb4743206f99823fbdb",
-    measurementId: "G-8QTNP9ERG4"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const errorBox = document.getElementById("errorBox");
-
-  // محاولة جلب البيانات
-  onSnapshot(collection(db, "menu"), (snapshot) => {
-    errorBox.style.display = "none";
-    document.getElementById("menuContainer").innerHTML = "تم الاتصال بنجاح! عدد الأصناف: " + snapshot.size;
-    // هنا هنعرض البيانات لو اشتغلت
-  }, (error) => {
-    // لو حصل خطأ هيظهر هنا بالتفصيل
-    errorBox.style.display = "block";
-    errorBox.innerHTML = "<strong>خطأ Firebase:</strong><br>" + error.code + "<br>" + error.message;
-  });
-</script>
+    <h1 id="test">جاري التحميل...</h1>
+    <script>
+        document.getElementById("test").innerText = "الكود شغال 100%";
+        console.log("الكود شغال وموجود!");
+    </script>
 </body>
 </html>
