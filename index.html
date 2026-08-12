@@ -7,7 +7,7 @@
   <style>
     body { font-family: system-ui, sans-serif; background-color: #f8f9fa; padding: 20px; margin: 0; }
     .container { max-width: 600px; margin: auto; }
-    h1 { text-align: center; color: #333; }
+    h1 { text-align: center; color: #333; margin-bottom: 5px; }
     .version-tag { text-align: center; color: #28a745; font-weight: bold; margin-bottom: 15px; }
     .card { background: white; border-radius: 12px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 12px; }
     .card img { width: 65px; height: 65px; object-fit: cover; border-radius: 8px; background-color: #f0f0f0; }
@@ -96,12 +96,25 @@
   const addBtn = document.getElementById("addBtn");
   const editModal = document.getElementById("editModal");
 
-  // تحويل الصورة لرابط داخلي مباشر
-  const fileToBase64 = (file) => new Promise((resolve, reject) => {
+  // دالة تصغير الصورة تلقائياً لتسريع الحفظ وتفادي التعليق
+  const compressImage = (file) => new Promise((resolve) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => reject(error);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_WIDTH = 400; // حجم مناسب جداً وخفيف
+        const scaleSize = MAX_WIDTH / img.width;
+        canvas.width = MAX_WIDTH;
+        canvas.height = img.height * scaleSize;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.7)); // ضغط الصورة لـ 70% جودة
+      };
+    };
   });
 
   // 1. عرض الأصناف
@@ -133,6 +146,8 @@
       `;
       menuContainer.appendChild(card);
     });
+  }, (error) => {
+    alert("خطأ في الاتصال بقواعد البيانات: " + error.message);
   });
 
   // 2. فتح نافذة التعديل
@@ -163,7 +178,7 @@
 
     try {
       if (file) {
-        imgUrl = await fileToBase64(file);
+        imgUrl = await compressImage(file);
       }
 
       await updateDoc(doc(db, "menu", id), {
@@ -212,7 +227,7 @@
     try {
       let imageUrl = "";
       if (file) {
-        imageUrl = await fileToBase64(file);
+        imageUrl = await compressImage(file);
       }
 
       await addDoc(collection(db, "menu"), { name, price, img: imageUrl });
@@ -222,7 +237,7 @@
       document.getElementById("itemImage").value = "";
       alert("تمت الإضافة بنجاح!");
     } catch (error) {
-      alert("حدث خطأ: " + error.message);
+      alert("حدث خطأ أثناء الإضافة: " + error.message);
     } finally {
       addBtn.disabled = false;
       addBtn.innerText = "إضافة للمنيو";
