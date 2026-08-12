@@ -9,9 +9,9 @@
     body { font-family: system-ui, sans-serif; background-color: #f8f9fa; padding: 15px; margin: 0; }
     .container { max-width: 500px; margin: auto; }
     
-    /* هيدر الموقع واللوجو */
+    /* هيدر الموقع - بنر الصورة العريض */
     .header-box { text-align: center; margin-bottom: 20px; }
-    .logo-img { width: 100px; height: 100px; object-fit: cover; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 3px solid #fff; margin-bottom: 8px; display: none; }
+    .banner-img { width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 12px; display: none; object-fit: cover; }
     h1 { text-align: center; color: #333; margin: 0; font-size: 1.8rem; }
     .version-tag { text-align: center; color: #28a745; font-weight: bold; margin-bottom: 15px; font-size: 0.9rem; }
     
@@ -45,18 +45,18 @@
 <body>
 
 <div class="container">
-  <!-- رأس الصفحة واللوجو -->
+  <!-- رأس الصفحة وبنر صورة المكان -->
   <div class="header-box">
-    <img id="mainLogo" class="logo-img" src="" alt="شعار المنيو">
+    <img id="mainLogo" class="banner-img" src="" alt="صورة المكان">
     <h1>🍽️ ZESTY MENU</h1>
     <div class="version-tag">✨ (لوحة التحكم الشاملة)</div>
   </div>
 
-  <!-- لوحة إعدادات اللوجو -->
+  <!-- لوحة إعدادات البنر/اللوجو -->
   <div class="admin-panel" style="border-top-color: #6f42c1;">
-    <h3>🖼️ تغيير اللوجو (Logo)</h3>
-    <input type="text" id="logoUrlInput" placeholder="ضع رابط صورة اللوجو هنا (URL)">
-    <button class="add-btn" style="background-color: #6f42c1;" id="saveLogoBtn">حفظ اللوجو 💾</button>
+    <h3>🖼️ تغيير صورة الواجهة (Banner)</h3>
+    <input type="text" id="logoUrlInput" placeholder="ضع رابط الصورة هنا">
+    <button class="add-btn" style="background-color: #6f42c1;" id="saveLogoBtn">حفظ الصورة 💾</button>
   </div>
 
   <!-- لوحة إدارة الأقسام -->
@@ -86,7 +86,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, setDoc, getDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, setDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBTEPyT_ylg83IZRiO4sUSWs8LKOt3x11Q",
@@ -106,14 +106,14 @@
   const settingsDoc = doc(db, "zesty_settings", "general");
 
   // ==========================
-  // 1. نظام اللوجو (Logo Settings)
+  // 1. نظام الصورة (Banner Settings)
   // ==========================
   onSnapshot(settingsDoc, (docSnap) => {
     const mainLogo = document.getElementById("mainLogo");
     if (docSnap.exists() && docSnap.data().logoUrl) {
       const url = docSnap.data().logoUrl;
       mainLogo.src = url;
-      mainLogo.style.display = "inline-block";
+      mainLogo.style.display = "block";
       document.getElementById("logoUrlInput").value = url;
     } else {
       mainLogo.style.display = "none";
@@ -122,11 +122,11 @@
 
   document.getElementById("saveLogoBtn").onclick = async () => {
     const url = document.getElementById("logoUrlInput").value.trim();
-    if (!url) return alert("من فضلك اكتب رابط صورة اللوجو!");
+    if (!url) return alert("من فضلك اكتب رابط الصورة!");
     
     try {
       await setDoc(settingsDoc, { logoUrl: url }, { merge: true });
-      alert("تم حفظ اللوجو بنجاح!");
+      alert("تم حفظ الصورة بنجاح!");
     } catch (e) {
       alert("خطأ في الحفظ: " + e.message);
     }
