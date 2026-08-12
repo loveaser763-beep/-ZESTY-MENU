@@ -8,8 +8,12 @@
   <style>
     body { font-family: system-ui, sans-serif; background-color: #f8f9fa; padding: 15px; margin: 0; }
     .container { max-width: 500px; margin: auto; }
-    h1 { text-align: center; color: #333; margin-bottom: 5px; }
-    .version-tag { text-align: center; color: #28a745; font-weight: bold; margin-bottom: 15px; }
+    
+    /* هيدر الموقع واللوجو */
+    .header-box { text-align: center; margin-bottom: 20px; }
+    .logo-img { width: 100px; height: 100px; object-fit: cover; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 3px solid #fff; margin-bottom: 8px; display: none; }
+    h1 { text-align: center; color: #333; margin: 0; font-size: 1.8rem; }
+    .version-tag { text-align: center; color: #28a745; font-weight: bold; margin-bottom: 15px; font-size: 0.9rem; }
     
     .admin-panel { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; border-top: 4px solid #333; }
     .admin-panel h3 { margin-top: 0; color: #333; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 8px; }
@@ -41,8 +45,19 @@
 <body>
 
 <div class="container">
-  <h1>🍽️ ZESTY MENU</h1>
-  <div class="version-tag">✨ (لوحة التحكم الشاملة)</div>
+  <!-- رأس الصفحة واللوجو -->
+  <div class="header-box">
+    <img id="mainLogo" class="logo-img" src="" alt="شعار المنيو">
+    <h1>🍽️ ZESTY MENU</h1>
+    <div class="version-tag">✨ (لوحة التحكم الشاملة)</div>
+  </div>
+
+  <!-- لوحة إعدادات اللوجو -->
+  <div class="admin-panel" style="border-top-color: #6f42c1;">
+    <h3>🖼️ تغيير اللوجو (Logo)</h3>
+    <input type="text" id="logoUrlInput" placeholder="ضع رابط صورة اللوجو هنا (URL)">
+    <button class="add-btn" style="background-color: #6f42c1;" id="saveLogoBtn">حفظ اللوجو 💾</button>
+  </div>
 
   <!-- لوحة إدارة الأقسام -->
   <div class="admin-panel" style="border-top-color: #007bff;">
@@ -71,7 +86,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, setDoc, getDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBTEPyT_ylg83IZRiO4sUSWs8LKOt3x11Q",
@@ -88,9 +103,37 @@
   
   const menuRef = collection(db, "zesty_menu");
   const categoriesRef = collection(db, "zesty_categories");
+  const settingsDoc = doc(db, "zesty_settings", "general");
 
   // ==========================
-  // 1. نظام الأقسام (Categories)
+  // 1. نظام اللوجو (Logo Settings)
+  // ==========================
+  onSnapshot(settingsDoc, (docSnap) => {
+    const mainLogo = document.getElementById("mainLogo");
+    if (docSnap.exists() && docSnap.data().logoUrl) {
+      const url = docSnap.data().logoUrl;
+      mainLogo.src = url;
+      mainLogo.style.display = "inline-block";
+      document.getElementById("logoUrlInput").value = url;
+    } else {
+      mainLogo.style.display = "none";
+    }
+  });
+
+  document.getElementById("saveLogoBtn").onclick = async () => {
+    const url = document.getElementById("logoUrlInput").value.trim();
+    if (!url) return alert("من فضلك اكتب رابط صورة اللوجو!");
+    
+    try {
+      await setDoc(settingsDoc, { logoUrl: url }, { merge: true });
+      alert("تم حفظ اللوجو بنجاح!");
+    } catch (e) {
+      alert("خطأ في الحفظ: " + e.message);
+    }
+  };
+
+  // ==========================
+  // 2. نظام الأقسام (Categories)
   // ==========================
   onSnapshot(categoriesRef, (snapshot) => {
     const catListDiv = document.getElementById("categoriesList");
@@ -109,13 +152,11 @@
       const data = docSnap.data();
       const id = docSnap.id;
       
-      // تعبئة قائمة الاختيارات في إضافة صنف
       const option = document.createElement("option");
       option.value = data.name;
       option.innerText = data.name;
       itemCategorySelect.appendChild(option);
 
-      // تعبئة قائمة إدارة الأقسام
       catListDiv.innerHTML += `
         <div class="cat-item">
           <span>${data.name}</span>
@@ -128,7 +169,6 @@
     });
   });
 
-  // إضافة قسم
   document.getElementById("addCatBtn").onclick = async () => {
     const catName = document.getElementById("newCategoryName").value;
     if (!catName) return alert("اكتب اسم القسم أولاً!");
@@ -137,14 +177,11 @@
     document.getElementById("newCategoryName").value = "";
   };
 
-  // تعديل قسم (مع تحديث الأصناف اللي جواه)
   window.editCategory = async (id, oldName) => {
     const newName = prompt("تعديل اسم القسم:", oldName);
     if (newName && newName !== oldName) {
-      // 1. تحديث اسم القسم
       await updateDoc(doc(db, "zesty_categories", id), { name: newName });
       
-      // 2. تحديث كل الأصناف المرتبطة بالقسم القديم للقسم الجديد أوتوماتيكياً
       const q = query(menuRef, where("category", "==", oldName));
       const querySnapshot = await getDocs(q);
       querySnapshot.forEach(async (itemDoc) => {
@@ -154,16 +191,14 @@
     }
   };
 
-  // حذف قسم
   window.deleteCategory = async (id, catName) => {
-    if (confirm(`هل أنت متأكد من حذف قسم "${catName}"؟ \n(الأصناف بداخلة لن تحذف ولكن ستظهر بدون قسم)`)) {
+    if (confirm(`هل أنت متأكد من حذف قسم "${catName}"؟`)) {
       await deleteDoc(doc(db, "zesty_categories", id));
     }
   };
 
-
   // ==========================
-  // 2. نظام الأصناف (Menu Items)
+  // 3. نظام الأصناف (Menu Items)
   // ==========================
   onSnapshot(menuRef, (snapshot) => {
     const menuContainer = document.getElementById("menuContainer");
@@ -201,7 +236,6 @@
     }
   });
 
-  // إضافة صنف
   document.getElementById("addBtn").onclick = async () => {
     const category = document.getElementById("itemCategory").value || "عام";
     const name = document.getElementById("itemName").value;
@@ -214,7 +248,6 @@
     document.getElementById("itemPrice").value = "";
   };
 
-  // تعديل صنف
   window.editItem = async (id, oldName, oldPrice) => {
     const newName = prompt("تعديل اسم الصنف:", oldName);
     const newPrice = prompt("تعديل السعر:", oldPrice);
@@ -223,7 +256,6 @@
     }
   };
 
-  // حذف صنف
   window.deleteItem = async (id) => {
     if (confirm("حذف هذا الصنف؟")) {
       await deleteDoc(doc(db, "zesty_menu", id));
