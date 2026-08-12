@@ -96,7 +96,7 @@
   const addBtn = document.getElementById("addBtn");
   const editModal = document.getElementById("editModal");
 
-  // ضغط الصورة لـ Thumbnail خفيف جداً لمنع أي مشاكل مساحة
+  // ضغط الصورة
   const compressImage = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -133,11 +133,14 @@
     reader.onerror = (err) => reject(err);
   });
 
+  // اسم الكوليكشن الجديد الصريح النظيف zesty_menu
+  const menuRef = collection(db, "zesty_menu");
+
   // الاستماع المباشر للقائمة
-  onSnapshot(collection(db, "menu"), (snapshot) => {
+  onSnapshot(menuRef, (snapshot) => {
     menuContainer.innerHTML = "";
     if (snapshot.empty) {
-      menuContainer.innerHTML = "<p style='text-align:center; color:#666;'>لا توجد أصناف حالياً.</p>";
+      menuContainer.innerHTML = "<p style='text-align:center; color:#666;'>لا توجد أصناف حالياً. أضف أول صنف الآن!</p>";
       return;
     }
 
@@ -163,8 +166,7 @@
       menuContainer.appendChild(card);
     });
   }, (error) => {
-    console.error(error);
-    menuContainer.innerHTML = `<p style='text-align:center; color:red; font-size:0.85rem;'>تنبيه: تأكد من تفعيل Publish في قواعد Firebase</p>`;
+    alert("خطأ Firebase: " + error.message);
   });
 
   // فتح التعديل
@@ -198,7 +200,7 @@
         imgUrl = await compressImage(file);
       }
 
-      await updateDoc(doc(db, "menu", id), {
+      await updateDoc(doc(db, "zesty_menu", id), {
         name: newName,
         price: newPrice,
         img: imgUrl
@@ -217,7 +219,7 @@
   document.getElementById("removeImgBtn").onclick = async () => {
     const id = document.getElementById("editDocId").value;
     if(confirm("هل تريد إزالة الصورة من هذا الصنف؟")) {
-      await updateDoc(doc(db, "menu", id), { img: "" });
+      await updateDoc(doc(db, "zesty_menu", id), { img: "" });
       editModal.style.display = "none";
       alert("تمت إزالة الصورة!");
     }
@@ -226,7 +228,7 @@
   // الحذف
   window.deleteItem = async (id) => {
     if (confirm("هل أنت متأكد من حذف هذا الصنف بالكامل؟")) {
-      await deleteDoc(doc(db, "menu", id));
+      await deleteDoc(doc(db, "zesty_menu", id));
     }
   };
 
@@ -247,7 +249,7 @@
         imageUrl = await compressImage(file);
       }
 
-      await addDoc(collection(db, "menu"), { name, price, img: imageUrl });
+      await addDoc(menuRef, { name, price, img: imageUrl });
 
       document.getElementById("itemName").value = "";
       document.getElementById("itemPrice").value = "";
