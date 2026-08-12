@@ -6,59 +6,72 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <title>Zesty Menu</title>
   <style>
-    body { font-family: system-ui, sans-serif; background-color: #f8f9fa; padding: 20px; margin: 0; }
+    body { font-family: system-ui, sans-serif; background-color: #f8f9fa; padding: 15px; margin: 0; }
     .container { max-width: 500px; margin: auto; }
     h1 { text-align: center; color: #333; margin-bottom: 5px; }
     .version-tag { text-align: center; color: #28a745; font-weight: bold; margin-bottom: 15px; }
     
-    .category-title { background: #e9ecef; color: #222; padding: 8px 12px; border-radius: 8px; margin-top: 20px; margin-bottom: 10px; font-size: 1.2rem; border-right: 5px solid #28a745; }
+    .admin-panel { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; border-top: 4px solid #333; }
+    .admin-panel h3 { margin-top: 0; color: #333; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 8px; }
     
+    input, select, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
+    button.add-btn { background-color: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; }
+    
+    /* تنسيق إدارة الأقسام */
+    .cat-list { margin-top: 10px; }
+    .cat-item { display: flex; justify-content: space-between; align-items: center; background: #f1f3f5; padding: 8px 12px; margin-bottom: 5px; border-radius: 6px; }
+    .cat-item span { font-weight: bold; color: #444; }
+    .cat-btns { display: flex; gap: 5px; }
+    .cat-btns button { padding: 4px 8px; width: auto; margin: 0; font-size: 0.85rem; border: none; border-radius: 4px; cursor: pointer; }
+    .cat-btns .edit-c { background: #ffc107; color: #000; }
+    .cat-btns .del-c { background: #dc3545; color: #fff; }
+
+    /* تنسيق القائمة الرئيسية */
+    .category-title { background: #e9ecef; color: #222; padding: 8px 12px; border-radius: 8px; margin-top: 25px; margin-bottom: 10px; font-size: 1.2rem; border-right: 5px solid #28a745; display: inline-block; width: 100%; box-sizing: border-box;}
     .card { background: white; border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; }
     .item-info { display: flex; flex-direction: column; }
     .item-name { font-size: 1.1rem; font-weight: bold; color: #222; }
     .item-price { font-size: 1rem; font-weight: bold; color: #d9534f; margin-top: 2px; }
-    
     .btn-group { display: flex; gap: 6px; }
-    .edit-btn { background-color: #ffc107; color: #333; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-weight: bold; }
-    .delete-btn { background-color: #dc3545; color: white; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
-    
-    .admin-panel { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 25px; }
-    input, select, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; background-color: white; }
-    button.add-btn { background-color: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    .btn-group button { padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; width: auto; font-size: 0.9rem;}
+    .edit-btn { background-color: #ffc107; color: #333; }
+    .delete-btn { background-color: #dc3545; color: white; }
   </style>
 </head>
 <body>
 
 <div class="container">
   <h1>🍽️ ZESTY MENU</h1>
-  <div class="version-tag">✨ (قائمة الطعام المقسمة)</div>
+  <div class="version-tag">✨ (لوحة التحكم الشاملة)</div>
 
-  <!-- لوحة الإضافة -->
-  <div class="admin-panel">
-    <h3>إضافة صنف جديد</h3>
-    
+  <!-- لوحة إدارة الأقسام -->
+  <div class="admin-panel" style="border-top-color: #007bff;">
+    <h3>📂 إدارة الأقسام (تعديل / إضافة / حذف)</h3>
+    <input type="text" id="newCategoryName" placeholder="اسم القسم (مثال: مشروبات ساخنة)">
+    <button class="add-btn" style="background-color: #007bff;" id="addCatBtn">إضافة قسم جديد ➕</button>
+    <div id="categoriesList" class="cat-list">جاري تحميل الأقسام...</div>
+  </div>
+
+  <!-- لوحة الإضافة للأصناف -->
+  <div class="admin-panel" style="border-top-color: #28a745;">
+    <h3>🍔 إضافة صنف للقائمة</h3>
     <label style="font-size: 0.9rem; color: #555;">اختر القسم:</label>
     <select id="itemCategory">
-      <option value="🍔 وجبات رئيسية">🍔 وجبات رئيسية</option>
-      <option value="🥤 مشروبات">🥤 مشروبات</option>
-      <option value="🍕 بيتزا وباستا">🍕 بيتزا وباستا</option>
-      <option value="🍰 حلويات">🍰 حلويات</option>
-      <option value="🍟 مقبلات وإضافات">🍟 مقبلات وإضافات</option>
+      <option value="">⏳ جاري تحميل الأقسام...</option>
     </select>
-
     <input type="text" id="itemName" placeholder="اسم الصنف (مثلاً: بيبسي)">
     <input type="number" id="itemPrice" placeholder="السعر (مثلاً: 30)">
-    <button class="add-btn" id="addBtn">إضافة للمنيو</button>
+    <button class="add-btn" id="addBtn">إضافة للمنيو ✔️</button>
   </div>
 
   <!-- عرض القائمة -->
-  <h2>القائمة:</h2>
+  <h2 style="color: #444; border-bottom: 2px solid #ccc; padding-bottom: 5px;">القائمة:</h2>
   <div id="menuContainer">جاري تحميل الأصناف...</div>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBTEPyT_ylg83IZRiO4sUSWs8LKOt3x11Q",
@@ -72,89 +85,147 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  
   const menuRef = collection(db, "zesty_menu");
-  const menuContainer = document.getElementById("menuContainer");
+  const categoriesRef = collection(db, "zesty_categories");
 
-  // عرض القائمة مقسمة فوراً
+  // ==========================
+  // 1. نظام الأقسام (Categories)
+  // ==========================
+  onSnapshot(categoriesRef, (snapshot) => {
+    const catListDiv = document.getElementById("categoriesList");
+    const itemCategorySelect = document.getElementById("itemCategory");
+    
+    catListDiv.innerHTML = "";
+    itemCategorySelect.innerHTML = "";
+
+    if (snapshot.empty) {
+      catListDiv.innerHTML = "<div style='text-align:center; color:#777; font-size:0.9rem;'>لا توجد أقسام مضافة بعد.</div>";
+      itemCategorySelect.innerHTML = "<option value='عام'>عام (افتراضي)</option>";
+      return;
+    }
+
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      const id = docSnap.id;
+      
+      // تعبئة قائمة الاختيارات في إضافة صنف
+      const option = document.createElement("option");
+      option.value = data.name;
+      option.innerText = data.name;
+      itemCategorySelect.appendChild(option);
+
+      // تعبئة قائمة إدارة الأقسام
+      catListDiv.innerHTML += `
+        <div class="cat-item">
+          <span>${data.name}</span>
+          <div class="cat-btns">
+            <button class="edit-c" onclick="editCategory('${id}', '${data.name}')">✏️</button>
+            <button class="del-c" onclick="deleteCategory('${id}', '${data.name}')">🗑️</button>
+          </div>
+        </div>
+      `;
+    });
+  });
+
+  // إضافة قسم
+  document.getElementById("addCatBtn").onclick = async () => {
+    const catName = document.getElementById("newCategoryName").value;
+    if (!catName) return alert("اكتب اسم القسم أولاً!");
+    
+    await addDoc(categoriesRef, { name: catName });
+    document.getElementById("newCategoryName").value = "";
+  };
+
+  // تعديل قسم (مع تحديث الأصناف اللي جواه)
+  window.editCategory = async (id, oldName) => {
+    const newName = prompt("تعديل اسم القسم:", oldName);
+    if (newName && newName !== oldName) {
+      // 1. تحديث اسم القسم
+      await updateDoc(doc(db, "zesty_categories", id), { name: newName });
+      
+      // 2. تحديث كل الأصناف المرتبطة بالقسم القديم للقسم الجديد أوتوماتيكياً
+      const q = query(menuRef, where("category", "==", oldName));
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach(async (itemDoc) => {
+        await updateDoc(doc(db, "zesty_menu", itemDoc.id), { category: newName });
+      });
+      alert("تم تعديل القسم وتحديث الأصناف بنجاح!");
+    }
+  };
+
+  // حذف قسم
+  window.deleteCategory = async (id, catName) => {
+    if (confirm(`هل أنت متأكد من حذف قسم "${catName}"؟ \n(الأصناف بداخلة لن تحذف ولكن ستظهر بدون قسم)`)) {
+      await deleteDoc(doc(db, "zesty_categories", id));
+    }
+  };
+
+
+  // ==========================
+  // 2. نظام الأصناف (Menu Items)
+  // ==========================
   onSnapshot(menuRef, (snapshot) => {
+    const menuContainer = document.getElementById("menuContainer");
     menuContainer.innerHTML = "";
+    
     if (snapshot.empty) {
       menuContainer.innerHTML = "<p style='text-align:center;'>لا توجد أصناف حالياً.</p>";
       return;
     }
 
-    // تجميع الأصناف حسب القسم
     const categories = {};
-
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
-      const id = docSnap.id;
-      const cat = data.category || "عام";
-
-      if (!categories[cat]) {
-        categories[cat] = [];
-      }
-      categories[cat].push({ id, ...data });
+      const cat = data.category || "أخرى (بدون قسم)";
+      if (!categories[cat]) categories[cat] = [];
+      categories[cat].push({ id: docSnap.id, ...data });
     });
 
-    // طباعة كل قسم بأصنافه
     for (const [catName, items] of Object.entries(categories)) {
-      const catHeader = document.createElement("div");
-      catHeader.className = "category-title";
-      catHeader.innerText = catName;
-      menuContainer.appendChild(catHeader);
-
+      menuContainer.innerHTML += `<div class="category-title">${catName}</div>`;
       items.forEach((item) => {
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-          <div class="item-info">
-            <span class="item-name">${item.name || 'بدون اسم'}</span>
-            <span class="item-price">${item.price ? item.price + ' ج.م' : '0 ج.م'}</span>
-          </div>
-          <div class="btn-group">
-            <button class="edit-btn" onclick="editItem('${item.id}', '${item.name}', ${item.price})">تعديل ✏️</button>
-            <button class="delete-btn" onclick="deleteItem('${item.id}')">حذف 🗑️</button>
+        menuContainer.innerHTML += `
+          <div class="card">
+            <div class="item-info">
+              <span class="item-name">${item.name}</span>
+              <span class="item-price">${item.price} ج.م</span>
+            </div>
+            <div class="btn-group">
+              <button class="edit-btn" onclick="editItem('${item.id}', '${item.name}', ${item.price})">✏️</button>
+              <button class="delete-btn" onclick="deleteItem('${item.id}')">🗑️</button>
+            </div>
           </div>
         `;
-        menuContainer.appendChild(card);
       });
     }
   });
 
   // إضافة صنف
   document.getElementById("addBtn").onclick = async () => {
-    const category = document.getElementById("itemCategory").value;
+    const category = document.getElementById("itemCategory").value || "عام";
     const name = document.getElementById("itemName").value;
     const price = Number(document.getElementById("itemPrice").value);
 
     if (!name || !price) return alert("يرجى كتابة الاسم والسعر");
 
-    try {
-      await addDoc(menuRef, { category, name, price });
-      document.getElementById("itemName").value = "";
-      document.getElementById("itemPrice").value = "";
-    } catch (e) {
-      alert("خطأ في الإضافة: " + e.message);
-    }
+    await addDoc(menuRef, { category, name, price });
+    document.getElementById("itemName").value = "";
+    document.getElementById("itemPrice").value = "";
   };
 
   // تعديل صنف
   window.editItem = async (id, oldName, oldPrice) => {
     const newName = prompt("تعديل اسم الصنف:", oldName);
     const newPrice = prompt("تعديل السعر:", oldPrice);
-    
     if (newName && newPrice) {
-      await updateDoc(doc(db, "zesty_menu", id), {
-        name: newName,
-        price: Number(newPrice)
-      });
+      await updateDoc(doc(db, "zesty_menu", id), { name: newName, price: Number(newPrice) });
     }
   };
 
   // حذف صنف
   window.deleteItem = async (id) => {
-    if (confirm("هل أنت متأكد من حذف هذا الصنف؟")) {
+    if (confirm("حذف هذا الصنف؟")) {
       await deleteDoc(doc(db, "zesty_menu", id));
     }
   };
