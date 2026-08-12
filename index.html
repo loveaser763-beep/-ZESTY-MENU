@@ -3,82 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <title>Zesty Menu</title>
   <style>
-    body { font-family: system-ui, sans-serif; background-color: #f8f9fa; padding: 20px; margin: 0; }
-    .container { max-width: 600px; margin: auto; }
-    h1 { text-align: center; color: #333; margin-bottom: 5px; }
-    .version-tag { text-align: center; color: #28a745; font-weight: bold; margin-bottom: 15px; }
-    .card { background: white; border-radius: 12px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 12px; }
-    .card img { width: 65px; height: 65px; object-fit: cover; border-radius: 8px; background-color: #f0f0f0; }
-    .item-info { flex: 1; }
-    .item-name { font-size: 1.1rem; font-weight: bold; color: #222; display: block; }
-    .item-price { font-size: 1rem; font-weight: bold; color: #d9534f; margin-top: 4px; display: block; }
-    
-    .btn-group { display: flex; gap: 6px; flex-direction: column; }
-    .edit-btn { background-color: #ffc107; color: #333; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 0.85rem; font-weight: bold; }
-    .delete-btn { background-color: #dc3545; color: white; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 0.85rem; }
-    
-    .admin-panel { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 25px; }
-    label { display: block; margin-top: 10px; font-size: 0.9rem; color: #555; }
-    input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
-    button.add-btn { background-color: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
-    button:disabled { background-color: #888; cursor: not-allowed; }
-
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
-    .modal-content { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; }
+    body { font-family: system-ui, sans-serif; background: #f8f9fa; padding: 20px; }
+    .container { max-width: 500px; margin: auto; }
+    .status-box { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; }
+    .card { background: white; padding: 12px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #ddd; display: flex; justify-content: space-between; }
+    input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+    button { background: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>🍽️ ZESTY MENU</h1>
-  <div class="version-tag">✨ (قائمة الطعام)</div>
+  <h2>🍽️ Zesty Menu - اختبار القراءة</h2>
 
-  <!-- لوحة إضافة صنف -->
-  <div class="admin-panel">
-    <h3>إضافة صنف جديد للمنيو</h3>
-    <input type="text" id="itemName" placeholder="اسم الصنف (مثلاً: بيبسي)">
-    <input type="number" id="itemPrice" placeholder="السعر (مثلاً: 30)">
+  <!-- صندوق حالة الاتصال -->
+  <div id="status" class="status-box">⏳ جاري الاتصال بـ Firebase...</div>
 
-    <label for="itemImage">صورة الوجبة (من الموبايل):</label>
-    <input type="file" id="itemImage" accept="image/*">
-    
-    <button class="add-btn" id="addBtn">إضافة للمنيو</button>
+  <div style="background:white; padding:15px; border-radius:8px; margin-bottom:20px;">
+    <input type="text" id="itemName" placeholder="اسم الصنف">
+    <input type="number" id="itemPrice" placeholder="السعر">
+    <button id="addBtn">إضافة للمنيو</button>
   </div>
 
-  <!-- عرض قائمة المنيو -->
-  <h2>القائمة:</h2>
-  <div id="menuContainer">جاري تحميل الأصناف...</div>
+  <h3>القائمة:</h3>
+  <div id="menuContainer">جاري التحميل...</div>
 </div>
 
-<!-- نافذة التعديل -->
-<div id="editModal" class="modal">
-  <div class="modal-content">
-    <h3>تعديل الصنف ✏️</h3>
-    <input type="hidden" id="editDocId">
-    <input type="hidden" id="editOldImgUrl">
-    
-    <label>الاسم الجديد:</label>
-    <input type="text" id="editName">
-    
-    <label>السعر الجديد:</label>
-    <input type="number" id="editPrice">
-
-    <label>تغيير الصورة (اختياري):</label>
-    <input type="file" id="editImage" accept="image/*">
-
-    <button id="saveEditBtn" style="background:#28a745; color:white; margin-top:10px;">حفظ التعديلات</button>
-    <button id="removeImgBtn" style="background:#ff9800; color:white;">حذف الصورة فقط 🖼️❌</button>
-    <button id="cancelEditBtn" style="background:#6c757d; color:white;">إلغاء</button>
-  </div>
-</div>
-
-<!-- Firebase SDKs -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBTEPyT_ylg83IZRiO4sUSWs8LKOt3x11Q",
@@ -92,174 +47,53 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-
+  const statusDiv = document.getElementById("status");
   const menuContainer = document.getElementById("menuContainer");
-  const addBtn = document.getElementById("addBtn");
-  const editModal = document.getElementById("editModal");
 
-  // ضغط الصورة
-  const compressImage = (file) => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target.result;
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const MAX_SIZE = 250;
-        let width = img.width;
-        let height = img.height;
+  // قراءة الأصناف مع إظهار سبب الخطأ فوراً
+  onSnapshot(collection(db, "zesty_menu"), (snapshot) => {
+    statusDiv.style.background = "#d4edda";
+    statusDiv.style.color = "#155724";
+    statusDiv.innerText = "✅ متصل بـ Firebase بنجاح! عدد الأصناف: " + snapshot.size;
 
-        if (width > height) {
-          if (width > MAX_SIZE) {
-            height *= MAX_SIZE / width;
-            width = MAX_SIZE;
-          }
-        } else {
-          if (height > MAX_SIZE) {
-            width *= MAX_SIZE / height;
-            height = MAX_SIZE;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL("image/jpeg", 0.6));
-      };
-      img.onerror = (err) => reject(err);
-    };
-    reader.onerror = (err) => reject(err);
-  });
-
-  const menuRef = collection(db, "zesty_menu");
-
-  // الاستماع المباشر للقائمة
-  onSnapshot(menuRef, (snapshot) => {
     menuContainer.innerHTML = "";
     if (snapshot.empty) {
-      menuContainer.innerHTML = "<p style='text-align:center; color:#666;'>لا توجد أصناف حالياً.</p>";
+      menuContainer.innerHTML = "<p>لا توجد أصناف في قاعدة البيانات.</p>";
       return;
     }
 
-    snapshot.forEach((document) => {
-      const data = document.data();
-      const id = document.id;
-      const card = document.createElement("div");
-      card.className = "card";
-      
-      const imgTag = data.img ? `<img src="${data.img}" alt="${data.name}">` : `<div style="width:65px;height:65px;background:#eee;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:#888;">بدون صورة</div>`;
-
-      card.innerHTML = `
-        ${imgTag}
-        <div class="item-info">
-          <span class="item-name">${data.name || 'بدون اسم'}</span>
-          <span class="item-price">${data.price ? data.price + ' ج.م' : ''}</span>
-        </div>
-        <div class="btn-group">
-          <button class="edit-btn" onclick="openEditModal('${id}', '${data.name}', ${data.price}, '${data.img || ''}')">تعديل ✏️</button>
-          <button class="delete-btn" onclick="deleteItem('${id}')">حذف 🗑️</button>
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      menuContainer.innerHTML += `
+        <div class="card">
+          <span><b>${data.name}</b></span>
+          <span>${data.price} ج.م</span>
         </div>
       `;
-      menuContainer.appendChild(card);
     });
+  }, (error) => {
+    statusDiv.style.background = "#f8d7da";
+    statusDiv.style.color = "#721c24";
+    statusDiv.innerText = "❌ خطأ في القراءة: " + error.message;
+    alert("سبب المشكلة: " + error.message);
   });
 
-  // فتح التعديل
-  window.openEditModal = (id, name, price, imgUrl) => {
-    document.getElementById("editDocId").value = id;
-    document.getElementById("editName").value = name;
-    document.getElementById("editPrice").value = price;
-    document.getElementById("editOldImgUrl").value = imgUrl;
-    document.getElementById("editImage").value = "";
-    editModal.style.display = "flex";
-  };
-
-  document.getElementById("cancelEditBtn").onclick = () => {
-    editModal.style.display = "none";
-  };
-
-  // حفظ التعديل
-  document.getElementById("saveEditBtn").onclick = async () => {
-    const id = document.getElementById("editDocId").value;
-    const newName = document.getElementById("editName").value;
-    const newPrice = Number(document.getElementById("editPrice").value);
-    const file = document.getElementById("editImage").files[0];
-    let imgUrl = document.getElementById("editOldImgUrl").value;
-
-    if(!newName || !newPrice) return alert("يرجى كتابة الاسم والسعر");
-
-    document.getElementById("saveEditBtn").innerText = "جاري الحفظ...";
-
-    try {
-      if (file) {
-        imgUrl = await compressImage(file);
-      }
-
-      await updateDoc(doc(db, "zesty_menu", id), {
-        name: newName,
-        price: newPrice,
-        img: imgUrl
-      });
-
-      editModal.style.display = "none";
-      alert("تم التعديل بنجاح!");
-    } catch (e) {
-      alert("حدث خطأ في التعديل: " + e.message);
-    } finally {
-      document.getElementById("saveEditBtn").innerText = "حفظ التعديلات";
-    }
-  };
-
-  // حذف الصورة
-  document.getElementById("removeImgBtn").onclick = async () => {
-    const id = document.getElementById("editDocId").value;
-    if(confirm("هل تريد إزالة الصورة من هذا الصنف؟")) {
-      await updateDoc(doc(db, "zesty_menu", id), { img: "" });
-      editModal.style.display = "none";
-      alert("تمت إزالة الصورة!");
-    }
-  };
-
-  // الحذف
-  window.deleteItem = async (id) => {
-    if (confirm("هل أنت متأكد من حذف هذا الصنف بالكامل؟")) {
-      await deleteDoc(doc(db, "zesty_menu", id));
-    }
-  };
-
-  // الإضافة
-  addBtn.addEventListener("click", async () => {
+  // إضافة صنف
+  document.getElementById("addBtn").onclick = async () => {
     const name = document.getElementById("itemName").value;
     const price = Number(document.getElementById("itemPrice").value);
-    const file = document.getElementById("itemImage").files[0];
 
-    if (!name || !price) return alert("يرجى إدخال اسم الصنف والسعر");
-
-    addBtn.disabled = true;
-    addBtn.innerText = "جاري الإضافة...";
+    if (!name || !price) return alert("اكتب الاسم والسعر");
 
     try {
-      let imageUrl = "";
-      if (file) {
-        imageUrl = await compressImage(file);
-      }
-
-      await addDoc(menuRef, { name, price, img: imageUrl });
-
+      await addDoc(collection(db, "zesty_menu"), { name, price });
+      alert("تمت الإضافة!");
       document.getElementById("itemName").value = "";
       document.getElementById("itemPrice").value = "";
-      document.getElementById("itemImage").value = "";
-      alert("تمت الإضافة بنجاح!");
-    } catch (error) {
-      alert("حدث خطأ أثناء الإضافة: " + error.message);
-    } finally {
-      addBtn.disabled = false;
-      addBtn.innerText = "إضافة للمنيو";
+    } catch (err) {
+      alert("فشلت الإضافة: " + err.message);
     }
-  });
+  };
 </script>
 
 </body>
