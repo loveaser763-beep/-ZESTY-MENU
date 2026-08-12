@@ -3,37 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <title>Zesty Menu</title>
   <style>
-    body { font-family: system-ui, sans-serif; background: #f8f9fa; padding: 20px; }
+    body { font-family: system-ui, sans-serif; background-color: #f8f9fa; padding: 20px; margin: 0; }
     .container { max-width: 500px; margin: auto; }
-    .status-box { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; }
-    .card { background: white; padding: 12px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #ddd; display: flex; justify-content: space-between; }
-    input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
-    button { background: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; }
+    h1 { text-align: center; color: #333; margin-bottom: 5px; }
+    .version-tag { text-align: center; color: #28a745; font-weight: bold; margin-bottom: 15px; }
+    .card { background: white; border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; }
+    .item-info { display: flex; flex-direction: column; }
+    .item-name { font-size: 1.1rem; font-weight: bold; color: #222; }
+    .item-price { font-size: 1rem; font-weight: bold; color: #d9534f; margin-top: 2px; }
+    
+    .btn-group { display: flex; gap: 6px; }
+    .edit-btn { background-color: #ffc107; color: #333; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-weight: bold; }
+    .delete-btn { background-color: #dc3545; color: white; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+    
+    .admin-panel { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 25px; }
+    input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
+    button.add-btn { background-color: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h2>🍽️ Zesty Menu - اختبار القراءة</h2>
+  <h1>🍽️ ZESTY MENU</h1>
+  <div class="version-tag">✨ (قائمة الطعام)</div>
 
-  <!-- صندوق حالة الاتصال -->
-  <div id="status" class="status-box">⏳ جاري الاتصال بـ Firebase...</div>
-
-  <div style="background:white; padding:15px; border-radius:8px; margin-bottom:20px;">
-    <input type="text" id="itemName" placeholder="اسم الصنف">
-    <input type="number" id="itemPrice" placeholder="السعر">
-    <button id="addBtn">إضافة للمنيو</button>
+  <!-- لوحة الإضافة -->
+  <div class="admin-panel">
+    <h3>إضافة صنف جديد</h3>
+    <input type="text" id="itemName" placeholder="اسم الصنف (مثلاً: بيبسي)">
+    <input type="number" id="itemPrice" placeholder="السعر (مثلاً: 30)">
+    <button class="add-btn" id="addBtn">إضافة للمنيو</button>
   </div>
 
-  <h3>القائمة:</h3>
-  <div id="menuContainer">جاري التحميل...</div>
+  <!-- عرض القائمة -->
+  <h2>القائمة:</h2>
+  <div id="menuContainer">جاري تحميل الأصناف...</div>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBTEPyT_ylg83IZRiO4sUSWs8LKOt3x11Q",
@@ -47,35 +59,35 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  const statusDiv = document.getElementById("status");
+  const menuRef = collection(db, "zesty_menu");
   const menuContainer = document.getElementById("menuContainer");
 
-  // قراءة الأصناف مع إظهار سبب الخطأ فوراً
-  onSnapshot(collection(db, "zesty_menu"), (snapshot) => {
-    statusDiv.style.background = "#d4edda";
-    statusDiv.style.color = "#155724";
-    statusDiv.innerText = "✅ متصل بـ Firebase بنجاح! عدد الأصناف: " + snapshot.size;
-
+  // عرض القائمة فوراً مع الأزرار
+  onSnapshot(menuRef, (snapshot) => {
     menuContainer.innerHTML = "";
     if (snapshot.empty) {
-      menuContainer.innerHTML = "<p>لا توجد أصناف في قاعدة البيانات.</p>";
+      menuContainer.innerHTML = "<p style='text-align:center;'>لا توجد أصناف حالياً.</p>";
       return;
     }
 
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      menuContainer.innerHTML += `
-        <div class="card">
-          <span><b>${data.name}</b></span>
-          <span>${data.price} ج.م</span>
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      const id = docSnap.id;
+      
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="item-info">
+          <span class="item-name">${data.name || 'بدون اسم'}</span>
+          <span class="item-price">${data.price ? data.price + ' ج.م' : '0 ج.م'}</span>
+        </div>
+        <div class="btn-group">
+          <button class="edit-btn" onclick="editItem('${id}', '${data.name}', ${data.price})">تعديل ✏️</button>
+          <button class="delete-btn" onclick="deleteItem('${id}')">حذف 🗑️</button>
         </div>
       `;
+      menuContainer.appendChild(card);
     });
-  }, (error) => {
-    statusDiv.style.background = "#f8d7da";
-    statusDiv.style.color = "#721c24";
-    statusDiv.innerText = "❌ خطأ في القراءة: " + error.message;
-    alert("سبب المشكلة: " + error.message);
   });
 
   // إضافة صنف
@@ -83,15 +95,34 @@
     const name = document.getElementById("itemName").value;
     const price = Number(document.getElementById("itemPrice").value);
 
-    if (!name || !price) return alert("اكتب الاسم والسعر");
+    if (!name || !price) return alert("يرجى كتابة الاسم والسعر");
 
     try {
-      await addDoc(collection(db, "zesty_menu"), { name, price });
-      alert("تمت الإضافة!");
+      await addDoc(menuRef, { name, price });
       document.getElementById("itemName").value = "";
       document.getElementById("itemPrice").value = "";
-    } catch (err) {
-      alert("فشلت الإضافة: " + err.message);
+    } catch (e) {
+      alert("خطأ في الإضافة: " + e.message);
+    }
+  };
+
+  // تعديل صنف
+  window.editItem = async (id, oldName, oldPrice) => {
+    const newName = prompt("تعديل اسم الصنف:", oldName);
+    const newPrice = prompt("تعديل السعر:", oldPrice);
+    
+    if (newName && newPrice) {
+      await updateDoc(doc(db, "zesty_menu", id), {
+        name: newName,
+        price: Number(newPrice)
+      });
+    }
+  };
+
+  // حذف صنف
+  window.deleteItem = async (id) => {
+    if (confirm("هل أنت متأكد من حذف هذا الصنف؟")) {
+      await deleteDoc(doc(db, "zesty_menu", id));
     }
   };
 </script>
