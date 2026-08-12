@@ -14,7 +14,6 @@
     .item-name { font-size: 1.1rem; font-weight: bold; color: #222; display: block; }
     .item-price { font-size: 1rem; font-weight: bold; color: #d9534f; margin-top: 4px; display: block; }
     
-    /* أزرار التعديل والحذف */
     .btn-group { display: flex; gap: 6px; flex-direction: column; }
     .edit-btn { background-color: #ffc107; color: #333; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 0.85rem; font-weight: bold; }
     .delete-btn { background-color: #dc3545; color: white; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 0.85rem; }
@@ -24,6 +23,9 @@
     input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
     button.add-btn { background-color: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
     button:disabled { background-color: #888; cursor: not-allowed; }
+
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; }
   </style>
 </head>
 <body>
@@ -48,6 +50,28 @@
   <div id="menuContainer">جاري تحميل المنيو...</div>
 </div>
 
+<!-- نافذة التعديل -->
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <h3>تعديل الصنف ✏️</h3>
+    <input type="hidden" id="editDocId">
+    <input type="hidden" id="editOldImgUrl">
+    
+    <label>الاسم الجديد:</label>
+    <input type="text" id="editName">
+    
+    <label>السعر الجديد:</label>
+    <input type="number" id="editPrice">
+
+    <label>تغيير الصورة (اختياري):</label>
+    <input type="file" id="editImage" accept="image/*">
+
+    <button id="saveEditBtn" style="background:#28a745; color:white; margin-top:10px;">حفظ التعديلات</button>
+    <button id="removeImgBtn" style="background:#ff9800; color:white;">حذف الصورة فقط 🖼️❌</button>
+    <button id="cancelEditBtn" style="background:#6c757d; color:white;">إلغاء</button>
+  </div>
+</div>
+
 <!-- Firebase SDKs -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -68,8 +92,9 @@
 
   const menuContainer = document.getElementById("menuContainer");
   const addBtn = document.getElementById("addBtn");
+  const editModal = document.getElementById("editModal");
 
-  // 1. عرض الأصناف مع أزرار التعديل والحذف
+  // 1. عرض الأصناف
   onSnapshot(collection(db, "menu"), (snapshot) => {
     menuContainer.innerHTML = "";
     snapshot.forEach((document) => {
@@ -78,7 +103,7 @@
       const card = document.createElement("div");
       card.className = "card";
       
-      const imgTag = data.img ? `<img src="${data.img}" alt="${data.name}">` : `<div style="width:65px;height:65px;background:#eee;border-radius:8px;"></div>`;
+      const imgTag = data.img ? `<img src="${data.img}" alt="${data.name}">` : `<div style="width:65px;height:65px;background:#eee;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:#888;">بدون صورة</div>`;
 
       card.innerHTML = `
         ${imgTag}
@@ -87,7 +112,7 @@
           <span class="item-price">${data.price ? data.price + ' ج.م' : ''}</span>
         </div>
         <div class="btn-group">
-          <button class="edit-btn" onclick="editItem('${id}', '${data.name}', ${data.price})">تعديل ✏️</button>
+          <button class="edit-btn" onclick="openEditModal('${id}', '${data.name}', ${data.price}, '${data.img || ''}')">تعديل ✏️</button>
           <button class="delete-btn" onclick="deleteItem('${id}')">حذف 🗑️</button>
         </div>
       `;
@@ -95,67 +120,94 @@
     });
   });
 
-  // 2. أمر التعديل
-  window.editItem = async (id, currentName, currentPrice) => {
-    const newName = prompt("تعديل اسم الصنف:", currentName);
-    const newPrice = prompt("تعديل السعر:", currentPrice);
+  // 2. فتح نافذة التعديل
+  window.openEditModal = (id, name, price, imgUrl) => {
+    document.getElementById("editDocId").value = id;
+    document.getElementById("editName").value = name;
+    document.getElementById("editPrice").value = price;
+    document.getElementById("editOldImgUrl").value = imgUrl;
+    document.getElementById("editImage").value = "";
+    editModal.style.display = "flex";
+  };
 
-    if (newName && newPrice) {
-      await updateDoc(doc(db, "menu", id), {
-        name: newName,
-        price: Number(newPrice)
-      });
-      alert("تم التعديل بنجاح!");
+  document.getElementById("cancelEditBtn").onclick = () => {
+    editModal.style.display = "none";
+  };
+
+  // 3. حفظ التعديلات
+  document.getElementById("saveEditBtn").onclick = async () => {
+    const id = document.getElementById("editDocId").value;
+    const newName = document.getElementById("editName").value;
+    const newPrice = Number(document.getElementById("editPrice").value);
+    const file = document.getElementById("editImage").files[0];
+    let imgUrl = document.getElementById("editOldImgUrl").value;
+
+    if(!newName || !newPrice) return alert("يرجى كتابة الاسم والسعر");
+
+    document.getElementById("saveEditBtn").innerText = "جاري الحفظ...";
+
+    if (file) {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch("https://api.imgbb.com/1/upload?key=6d207e02198a847aa98d0a2a901485a5", { method: "POST", body: formData });
+      const resData = await res.json();
+      if(resData.success) imgUrl = resData.data.url;
+    }
+
+    await updateDoc(doc(db, "menu", id), {
+      name: newName,
+      price: newPrice,
+      img: imgUrl
+    });
+
+    document.getElementById("saveEditBtn").innerText = "حفظ التعديلات";
+    editModal.style.display = "none";
+    alert("تم التعديل بنجاح!");
+  };
+
+  // 4. حذف الصورة فقط
+  document.getElementById("removeImgBtn").onclick = async () => {
+    const id = document.getElementById("editDocId").value;
+    if(confirm("هل تريد إزالة الصورة من هذا الصنف؟")) {
+      await updateDoc(doc(db, "menu", id), { img: "" });
+      editModal.style.display = "none";
+      alert("تمت إزالة الصورة!");
     }
   };
 
-  // 3. أمر الحذف
+  // 5. أمر الحذف الكلي
   window.deleteItem = async (id) => {
-    if (confirm("هل أنت متأكد من حذف هذا الصنف؟")) {
+    if (confirm("هل أنت متأكد من حذف هذا الصنف بالكامل؟")) {
       await deleteDoc(doc(db, "menu", id));
     }
   };
 
-  // 4. إضافة صنف جديد
+  // 6. إضافة صنف جديد
   addBtn.addEventListener("click", async () => {
     const name = document.getElementById("itemName").value;
     const price = Number(document.getElementById("itemPrice").value);
-    const fileInput = document.getElementById("itemImage");
-    const file = fileInput.files[0];
+    const file = document.getElementById("itemImage").files[0];
 
-    if (!name || !price) {
-      alert("يرجى إدخال اسم الصنف والسعر");
-      return;
-    }
+    if (!name || !price) return alert("يرجى إدخال اسم الصنف والسعر");
 
     addBtn.disabled = true;
     addBtn.innerText = "جاري الإضافة...";
 
     try {
       let imageUrl = "";
-
       if (file) {
         const formData = new FormData();
         formData.append("image", file);
-        const res = await fetch("https://api.imgbb.com/1/upload?key=6d207e02198a847aa98d0a2a901485a5", {
-          method: "POST",
-          body: formData
-        });
+        const res = await fetch("https://api.imgbb.com/1/upload?key=6d207e02198a847aa98d0a2a901485a5", { method: "POST", body: formData });
         const resData = await res.json();
-        if(resData.success) {
-          imageUrl = resData.data.url;
-        }
+        if(resData.success) imageUrl = resData.data.url;
       }
 
-      await addDoc(collection(db, "menu"), {
-        name: name,
-        price: price,
-        img: imageUrl
-      });
+      await addDoc(collection(db, "menu"), { name, price, img: imageUrl });
 
       document.getElementById("itemName").value = "";
       document.getElementById("itemPrice").value = "";
-      fileInput.value = "";
+      document.getElementById("itemImage").value = "";
       alert("تمت الإضافة بنجاح!");
     } catch (error) {
       alert("حدث خطأ: " + error.message);
