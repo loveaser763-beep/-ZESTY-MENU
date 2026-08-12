@@ -96,8 +96,8 @@
   const addBtn = document.getElementById("addBtn");
   const editModal = document.getElementById("editModal");
 
-  // دالة تصغير الصورة تلقائياً لتسريع الحفظ وتفادي التعليق
-  const compressImage = (file) => new Promise((resolve) => {
+  // دالة تصغير وصغط الصورة بشكل قاطع لتفادي حدود Firebase (مساحة ممتازة < 50KB)
+  const compressImage = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = (event) => {
@@ -105,16 +105,32 @@
       img.src = event.target.result;
       img.onload = () => {
         const canvas = document.createElement("canvas");
-        const MAX_WIDTH = 400; // حجم مناسب جداً وخفيف
-        const scaleSize = MAX_WIDTH / img.width;
-        canvas.width = MAX_WIDTH;
-        canvas.height = img.height * scaleSize;
+        const MAX_SIZE = 250; // أبعاد مثالية جداً للعرض المباشر على الموبايل
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_SIZE) {
+            height *= MAX_SIZE / width;
+            width = MAX_SIZE;
+          }
+        } else {
+          if (height > MAX_SIZE) {
+            width *= MAX_SIZE / height;
+            height = MAX_SIZE;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
 
         const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL("image/jpeg", 0.7)); // ضغط الصورة لـ 70% جودة
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", 0.5)); // جودة 50% لتقليل المساحة فوراً
       };
+      img.onerror = (err) => reject(err);
     };
+    reader.onerror = (err) => reject(err);
   });
 
   // 1. عرض الأصناف
@@ -147,7 +163,7 @@
       menuContainer.appendChild(card);
     });
   }, (error) => {
-    alert("خطأ في الاتصال بقواعد البيانات: " + error.message);
+    alert("خطأ: " + error.message);
   });
 
   // 2. فتح نافذة التعديل
